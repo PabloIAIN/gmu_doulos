@@ -1,0 +1,56 @@
+name: gmu_doulos
+description: Aplicación para el Club de Guías Mayores GMU Doulos
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  
+  # Base de datos local (Unidad III)
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  
+  # Mapas y GPS (Unidad III)
+  # google_maps_flutter: ^2.5.0
+  # geolocator: ^10.1.0
+  
+  # Notificaciones (Unidad III)
+  flutter_local_notifications: ^18.0.0
+  
+  # Compartir e Intents (Unidad III)
+  # share_plus: ^7.2.1
+  # url_launcher: ^6.2.1
+  
+  # Cámara (Unidad IV)
+  # camera: ^0.10.5+5
+  image_picker: ^1.0.4
+  path_provider: ^2.1.1
+  
+  # Sensores (Unidad IV)
+  # sensors_plus: ^4.0.2
+  # flutter_compass: ^0.8.0
+  # torch_light: ^1.0.0
+
+  # Autenticación
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # Fuentes personalizadas (opcional)
+  # fonts:
+  #   - family: Poppins
+  #     fonts:
+  #       - asset: assets/fonts/Poppins-Regular.ttf
+  #       - asset: assets/fonts/Poppins-Bold.ttf
+  #         weight: 700x

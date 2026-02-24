@@ -1088,6 +1088,56 @@ class DatabaseService {
     ''');
   }
 
+  // ── CRUD Secciones ──
+
+  Future<int> insertSeccion(Map<String, dynamic> seccion) async {
+    final db = await database;
+    return await db.insert('carpeta_secciones', seccion,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updateSeccion(Map<String, dynamic> seccion) async {
+    final db = await database;
+    return await db.update('carpeta_secciones', seccion,
+        where: 'id = ?', whereArgs: [seccion['id']]);
+  }
+
+  Future<int> deleteSeccion(String id) async {
+    final db = await database;
+    final requisitos = await db.query('carpeta_requisitos',
+        where: 'seccion_id = ?', whereArgs: [id]);
+    for (final r in requisitos) {
+      await db.delete('carpeta_progreso',
+          where: 'requisito_id = ?', whereArgs: [r['id']]);
+    }
+    await db.delete('carpeta_requisitos',
+        where: 'seccion_id = ?', whereArgs: [id]);
+    return await db.delete('carpeta_secciones',
+        where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ── CRUD Requisitos ──
+
+  Future<int> insertRequisito(Map<String, dynamic> requisito) async {
+    final db = await database;
+    return await db.insert('carpeta_requisitos', requisito,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updateRequisito(Map<String, dynamic> requisito) async {
+    final db = await database;
+    return await db.update('carpeta_requisitos', requisito,
+        where: 'id = ?', whereArgs: [requisito['id']]);
+  }
+
+  Future<int> deleteRequisito(String id) async {
+    final db = await database;
+    await db.delete('carpeta_progreso',
+        where: 'requisito_id = ?', whereArgs: [id]);
+    return await db.delete('carpeta_requisitos',
+        where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<List<Map<String, dynamic>>> getCarpetaProgresoMiembro(String miembroId) async {
     final db = await database;
     return await db.rawQuery('''

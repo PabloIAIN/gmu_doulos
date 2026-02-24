@@ -4,8 +4,8 @@ import '../services/database_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'asistencia/asistencia_screen.dart';
-import 'evidencias/evidencias_screen.dart';
 import 'carpeta/carpeta_review_screen.dart';
+import 'notificaciones/notificaciones_screen.dart';
 import 'unidades/unidades_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -646,7 +646,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildActionItem(icon: Icons.group, label: 'Mi\nUnidad', color: Colors.blue, onTap: () => widget.onNavigateToTab?.call(1)),
           _buildActionItem(icon: Icons.folder_special, label: 'Revisar\nCarpetas', color: Colors.green, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CarpetaReviewScreen()))),
           _buildActionItem(icon: Icons.add_task, label: 'Registrar\nAsistencia', color: Colors.orange, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AsistenciaScreen()))),
-          _buildActionItem(icon: Icons.camera_alt, label: 'Tomar\nFoto', color: Colors.purple, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EvidenciasScreen()))),
+          _buildActionItem(icon: Icons.menu_book, label: 'Manual', color: Colors.purple, onTap: () => widget.onNavigateToTab?.call(3)),
         ],
       );
     } else {
@@ -655,8 +655,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildActionItem(icon: Icons.folder, label: 'Mi\nCarpeta', color: Colors.blue, onTap: () => widget.onNavigateToTab?.call(1)),
           _buildActionItem(icon: Icons.calendar_month, label: 'Ver\nCalendario', color: Colors.green, onTap: () => widget.onNavigateToTab?.call(2)),
-          _buildActionItem(icon: Icons.camera_alt, label: 'Subir\nEvidencia', color: Colors.orange, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EvidenciasScreen()))),
-          _buildActionItem(icon: Icons.handyman, label: 'Herramientas', color: Colors.purple, onTap: () => widget.onNavigateToTab?.call(3)),
+          _buildActionItem(icon: Icons.menu_book, label: 'Manual', color: Colors.orange, onTap: () => widget.onNavigateToTab?.call(3)),
+          _buildActionItem(icon: Icons.notifications, label: 'Notificaciones', color: Colors.purple, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificacionesScreen()))),
         ],
       );
     }
@@ -679,7 +679,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 28),

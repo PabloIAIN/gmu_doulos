@@ -301,56 +301,6 @@ class _CarpetaReviewDetailScreenState extends State<_CarpetaReviewDetailScreen> 
     return const Text('Sin enviar', style: TextStyle(fontSize: 11, color: Colors.grey));
   }
 
-  void _showEvidenceReview(Map<String, dynamic> req, Map<String, dynamic> prog) {
-    final evidenciaPath = prog['evidencia_path'] as String?;
-    final notas = prog['notas'] as String?;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(req['nombre'], style: const TextStyle(fontSize: 15)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.miembroNombre, style: const TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 12),
-              if (evidenciaPath != null && File(evidenciaPath).existsSync()) ...[
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _showFullImage(evidenciaPath);
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(File(evidenciaPath), height: 250, width: double.infinity, fit: BoxFit.cover),
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
-              if (notas != null && notas.isNotEmpty) ...[
-                const Text('Notas del aspirante:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                const SizedBox(height: 4),
-                Text(notas, style: const TextStyle(fontSize: 13)),
-              ],
-              if (evidenciaPath == null && (notas == null || notas.isEmpty))
-                Text('Sin evidencia adjunta', style: TextStyle(color: Colors.grey[500])),
-              if (prog['fecha_envio'] != null) ...[
-                const SizedBox(height: 8),
-                Text('Enviado: ${_formatFecha(prog['fecha_envio'] as String)}',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cerrar')),
-        ],
-      ),
-    );
-  }
-
   Future<void> _preAprobar(String requisitoId, String requisitoNombre) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -499,6 +449,9 @@ class _CarpetaReviewDetailScreenState extends State<_CarpetaReviewDetailScreen> 
                     children: reqs.map((req) {
                       final prog = _progresoMap[req['id']];
                       final estado = prog?['estado'] as String? ?? 'pendiente';
+                      final evidenciaPath = prog?['evidencia_path'] as String?;
+                      final notas = prog?['notas'] as String?;
+                      final hasEvidence = evidenciaPath != null || (notas != null && notas.isNotEmpty);
 
                       return Column(
                         children: [
@@ -516,10 +469,80 @@ class _CarpetaReviewDetailScreenState extends State<_CarpetaReviewDetailScreen> 
                               ),
                             ),
                             subtitle: _buildReviewSubtitle(prog, estado),
-                            onTap: estado == 'enviado' && prog != null
-                                ? () => _showEvidenceReview(req, prog)
-                                : null,
                           ),
+                          // Mostrar evidencia inline para items con evidencia
+                          if (hasEvidence && estado != 'pendiente')
+                            Padding(
+                              padding: const EdgeInsets.only(left: 56, right: 16, bottom: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (evidenciaPath != null && File(evidenciaPath).existsSync())
+                                    GestureDetector(
+                                      onTap: () => _showFullImage(evidenciaPath),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.file(
+                                          File(evidenciaPath),
+                                          height: 200,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  if (notas != null && notas.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withValues(alpha: 0.08),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('Notas del aspirante:',
+                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey)),
+                                          const SizedBox(height: 4),
+                                          Text(notas, style: const TextStyle(fontSize: 13)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  if (prog?['fecha_envio'] != null) ...[
+                                    const SizedBox(height: 4),
+                                    Text('Enviado: ${_formatFecha(prog!['fecha_envio'] as String)}',
+                                        style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                                  ],
+                                  if (estado == 'devuelto' && prog?['comentario_devolucion'] != null) ...[
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.warningOrange.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: AppTheme.warningOrange.withValues(alpha: 0.3)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.feedback, color: AppTheme.warningOrange, size: 16),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              prog!['comentario_devolucion'] as String,
+                                              style: const TextStyle(fontSize: 12, color: AppTheme.warningOrange),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          // Botones de accion solo para items "enviado"
                           if (estado == 'enviado')
                             Padding(
                               padding: const EdgeInsets.only(left: 56, right: 16, bottom: 8),

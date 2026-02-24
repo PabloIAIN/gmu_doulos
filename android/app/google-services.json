@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "705823973585",
+    "project_id": "gmudoulos",
+    "storage_bucket": "gmudoulos.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:705823973585:android:0b4835c937b5c9699c25f0",
+        "android_client_info": {
+          "package_name": "com.example.gmu_doulos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr_FLQBgxuTlYRgnf56HR1nOOt-nJ0sno"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

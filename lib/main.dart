@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 // Pantallas
 import 'screens/home_screen.dart';
 import 'screens/miembros/miembros_screen.dart';
-import 'screens/especialidades/especialidades_screen.dart';
 import 'screens/calendario/calendario_screen.dart';
-import 'screens/mapas/mapas_screen.dart';
-import 'screens/evidencias/evidencias_screen.dart';
 import 'screens/asistencia/asistencia_screen.dart';
-import 'screens/herramientas/herramientas_screen.dart';
 import 'screens/manual/manual_screen.dart';
 import 'screens/ajustes/ajustes_screen.dart';
 import 'screens/notificaciones/notificaciones_screen.dart';
@@ -20,11 +18,13 @@ import 'screens/unidades/consejero_unidad_screen.dart';
 import 'screens/carpeta/carpeta_screen.dart';
 import 'screens/carpeta/carpeta_review_screen.dart';
 import 'screens/carpeta/carpeta_approve_screen.dart';
+import 'screens/carpeta/carpeta_manage_screen.dart';
 import 'screens/admin/admin_panel_screen.dart';
 import 'screens/admin/gestion_cuentas_screen.dart';
 
 // Servicios
-import 'services/notification_service.dart';
+import 'services/notification_service.dart'
+    show NotificationService, firebaseMessagingBackgroundHandler;
 import 'services/auth_service.dart';
 
 // Tema
@@ -36,6 +36,8 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await NotificationService().init();
   runApp(const GMUDoulosApp());
 }
@@ -216,7 +218,7 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
         ConsejeroUnidadScreen(onOpenDrawer: _openDrawer),
         CalendarioScreen(onOpenDrawer: _openDrawer),
-        HerramientasScreen(onOpenDrawer: _openDrawer),
+        ManualScreen(onOpenDrawer: _openDrawer),
       ];
     } else {
       // Aspirante
@@ -227,7 +229,7 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
         CarpetaScreen(onOpenDrawer: _openDrawer),
         CalendarioScreen(onOpenDrawer: _openDrawer),
-        HerramientasScreen(onOpenDrawer: _openDrawer),
+        ManualScreen(onOpenDrawer: _openDrawer),
       ];
     }
   }
@@ -274,9 +276,9 @@ class _MainNavigationState extends State<MainNavigation> {
           label: 'Calendario',
         ),
         NavigationDestination(
-          icon: Icon(Icons.handyman_outlined),
-          selectedIcon: Icon(Icons.handyman),
-          label: 'Herramientas',
+          icon: Icon(Icons.menu_book_outlined),
+          selectedIcon: Icon(Icons.menu_book),
+          label: 'Manual',
         ),
       ];
     } else {
@@ -297,9 +299,9 @@ class _MainNavigationState extends State<MainNavigation> {
           label: 'Calendario',
         ),
         NavigationDestination(
-          icon: Icon(Icons.handyman_outlined),
-          selectedIcon: Icon(Icons.handyman),
-          label: 'Herramientas',
+          icon: Icon(Icons.menu_book_outlined),
+          selectedIcon: Icon(Icons.menu_book),
+          label: 'Manual',
         ),
       ];
     }
@@ -384,12 +386,10 @@ class _MainNavigationState extends State<MainNavigation> {
                       Icons.calendar_month, 'Calendario', () => _goTab(2)),
                   _drawerItem(Icons.fact_check, 'Asistencia',
                       () => _pushScreen(const AsistenciaScreen())),
-                  _drawerItem(Icons.emoji_events, 'Especialidades',
-                      () => _pushScreen(const EspecialidadesScreen())),
+                  _drawerItem(Icons.folder_copy, 'Gestionar Carpeta',
+                      () => _pushScreen(const CarpetaManageScreen())),
                   _drawerItem(Icons.approval, 'Aprobar Carpetas',
                       () => _pushScreen(const CarpetaApproveScreen())),
-                  _drawerItem(Icons.photo_library, 'Evidencias',
-                      () => _pushScreen(const EvidenciasScreen())),
                   _drawerItem(Icons.notifications, 'Notificaciones',
                       () => _pushScreen(const NotificacionesScreen())),
                   const Divider(),
@@ -415,14 +415,8 @@ class _MainNavigationState extends State<MainNavigation> {
                       () => _pushScreen(const AsistenciaScreen())),
                   _drawerItem(Icons.folder_special, 'Revisar Carpetas',
                       () => _pushScreen(const CarpetaReviewScreen())),
-                  _drawerItem(Icons.emoji_events, 'Especialidades',
-                      () => _pushScreen(const EspecialidadesScreen())),
-                  _drawerItem(Icons.photo_library, 'Evidencias',
-                      () => _pushScreen(const EvidenciasScreen())),
-                  _drawerItem(Icons.menu_book, 'Manual',
-                      () => _pushScreen(const ManualScreen())),
                   _drawerItem(
-                      Icons.handyman, 'Herramientas', () => _goTab(3)),
+                      Icons.menu_book, 'Manual', () => _goTab(3)),
                   _drawerItem(Icons.notifications, 'Notificaciones',
                       () => _pushScreen(const NotificacionesScreen())),
                 ],
@@ -433,16 +427,8 @@ class _MainNavigationState extends State<MainNavigation> {
                       Icons.folder, 'Mi Carpeta', () => _goTab(1)),
                   _drawerItem(
                       Icons.calendar_month, 'Calendario', () => _goTab(2)),
-                  _drawerItem(Icons.emoji_events, 'Especialidades',
-                      () => _pushScreen(const EspecialidadesScreen())),
-                  _drawerItem(Icons.photo_library, 'Evidencias',
-                      () => _pushScreen(const EvidenciasScreen())),
-                  _drawerItem(Icons.menu_book, 'Manual',
-                      () => _pushScreen(const ManualScreen())),
                   _drawerItem(
-                      Icons.handyman, 'Herramientas', () => _goTab(3)),
-                  _drawerItem(Icons.map, 'Mapas',
-                      () => _pushScreen(const MapasScreen())),
+                      Icons.menu_book, 'Manual', () => _goTab(3)),
                   _drawerItem(Icons.notifications, 'Notificaciones',
                       () => _pushScreen(const NotificacionesScreen())),
                 ],

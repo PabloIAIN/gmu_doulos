@@ -4,7 +4,7 @@ import '../unidades/unidades_screen.dart';
 import '../miembros/miembros_screen.dart';
 import '../calendario/calendario_screen.dart';
 import '../asistencia/asistencia_screen.dart';
-import '../especialidades/especialidades_screen.dart';
+import '../carpeta/carpeta_manage_screen.dart';
 import '../carpeta/carpeta_approve_screen.dart';
 import 'gestion_cuentas_screen.dart';
 
@@ -117,10 +117,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   ),
                   _buildActionCard(
                     context,
-                    icon: Icons.emoji_events,
-                    label: 'Especialidades',
+                    icon: Icons.folder_copy,
+                    label: 'Gestionar\nCarpeta',
                     color: Colors.teal,
-                    onTap: () => _navTo(const EspecialidadesScreen()),
+                    onTap: () => _navTo(const CarpetaManageScreen()),
                   ),
                   _buildActionCard(
                     context,
@@ -191,7 +191,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 28),

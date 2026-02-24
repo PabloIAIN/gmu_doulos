@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import '../models/miembro.dart';
 import 'database_service.dart';
+import 'notification_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -52,11 +53,13 @@ class AuthService {
 
     _currentUser = miembro;
     await _db.setConfig('session_user_id', miembro.id);
+    await _suscribirTopics();
     return miembro;
   }
 
   // ── Logout ──
   Future<void> logout() async {
+    await _desuscribirTopics();
     _currentUser = null;
     await _db.setConfig('session_user_id', '');
   }
@@ -73,7 +76,30 @@ class AuthService {
     }
 
     _currentUser = miembro;
+    await _suscribirTopics();
     return true;
+  }
+
+  // ── FCM Topics ──
+  Future<void> _suscribirTopics() async {
+    if (_currentUser == null) return;
+    final ns = NotificationService();
+    await ns.suscribirseATopic('todos');
+    if (isAdmin) {
+      await ns.suscribirseATopic('admin');
+    } else if (isConsejero) {
+      await ns.suscribirseATopic('consejero');
+    } else if (isAspirante) {
+      await ns.suscribirseATopic('aspirante');
+    }
+  }
+
+  Future<void> _desuscribirTopics() async {
+    final ns = NotificationService();
+    await ns.desuscribirseDeTopic('todos');
+    await ns.desuscribirseDeTopic('admin');
+    await ns.desuscribirseDeTopic('consejero');
+    await ns.desuscribirseDeTopic('aspirante');
   }
 
   // ── Primera ejecución ──
@@ -112,6 +138,7 @@ class AuthService {
     await _db.insertMiembro(miembro);
     _currentUser = miembro;
     await _db.setConfig('session_user_id', miembro.id);
+    await _suscribirTopics();
     return miembro;
   }
 

@@ -172,7 +172,7 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
                             backgroundColor: Theme.of(context)
                                 .colorScheme
                                 .primary
-                                .withOpacity(0.1),
+                                .withValues(alpha: 0.1),
                             child: Icon(Icons.group_work,
                                 color: Theme.of(context).colorScheme.primary),
                           ),
@@ -242,15 +242,17 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
       _miembrosUnidad.where((m) => m['rol_en_unidad'] == 'aspirante').toList();
 
   Future<void> _asignarMiembro(String rolEnUnidad) async {
-    // Obtener todos los miembros que no estan en esta unidad
+    // Obtener todos los miembros activos y los que ya estan en CUALQUIER unidad
     final db = await _db.database;
     final todosQuery = await db.query('miembros', where: 'activo = 1');
 
-    final idsEnUnidad =
-        _miembrosUnidad.map((m) => m['miembro_id']).toSet();
+    // Consultar TODAS las asignaciones de unidad (no solo la actual)
+    final todasAsignaciones = await db.query('unidad_miembros');
+    final idsAsignados =
+        todasAsignaciones.map((m) => m['miembro_id']).toSet();
 
     final disponibles = todosQuery
-        .where((m) => !idsEnUnidad.contains(m['id']))
+        .where((m) => !idsAsignados.contains(m['id']))
         .toList();
 
     // Filtrar por rol adecuado
@@ -268,8 +270,8 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(rolEnUnidad == 'consejero'
-              ? 'No hay consejeros/instructores disponibles'
-              : 'No hay aspirantes disponibles'),
+              ? 'No hay consejeros/instructores disponibles (todos ya estan asignados a una unidad)'
+              : 'No hay aspirantes disponibles (todos ya estan asignados a una unidad)'),
         ),
       );
       return;
@@ -326,7 +328,27 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
     );
   }
 
-  Future<void> _desasignar(String miembroId) async {
+  Future<void> _desasignar(String miembroId, String nombreCompleto) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Desasignar miembro'),
+        content: Text('¿Estas seguro de desasignar a $nombreCompleto de esta unidad?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Desasignar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+
     await _db.desasignarMiembroDeUnidad(
       unidadId: widget.unidadId,
       miembroId: miembroId,
@@ -377,7 +399,7 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
                           margin: const EdgeInsets.only(bottom: 8),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Colors.blue.withOpacity(0.1),
+                              backgroundColor: Colors.blue.withValues(alpha: 0.1),
                               child: const Icon(Icons.school,
                                   color: Colors.blue),
                             ),
@@ -387,8 +409,9 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
                             trailing: IconButton(
                               icon: const Icon(Icons.remove_circle_outline,
                                   color: Colors.red),
-                              onPressed: () =>
-                                  _desasignar(m['miembro_id'] as String),
+                              onPressed: () => _desasignar(
+                                  m['miembro_id'] as String,
+                                  '${m['nombre']} ${m['apellido']}'),
                             ),
                           ),
                         )),
@@ -426,7 +449,7 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
                           margin: const EdgeInsets.only(bottom: 8),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Colors.green.withOpacity(0.1),
+                              backgroundColor: Colors.green.withValues(alpha: 0.1),
                               child: Text(
                                 '${(m['nombre'] as String)[0]}${(m['apellido'] as String)[0]}'
                                     .toUpperCase(),
@@ -440,8 +463,9 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
                             trailing: IconButton(
                               icon: const Icon(Icons.remove_circle_outline,
                                   color: Colors.red),
-                              onPressed: () =>
-                                  _desasignar(m['miembro_id'] as String),
+                              onPressed: () => _desasignar(
+                                  m['miembro_id'] as String,
+                                  '${m['nombre']} ${m['apellido']}'),
                             ),
                           ),
                         )),

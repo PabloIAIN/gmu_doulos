@@ -345,9 +345,19 @@ class NotificationService {
           'tipo': tipo,
         }),
       );
-      return response.statusCode == 200;
+      print('=== PUSH RESPONSE: ${response.statusCode} ${response.body} ===');
+      if (response.statusCode == 200) return true;
+      // Si el backend fallo, mostrar local como fallback
+      await mostrarNotificacion(
+        id: 'local_${DateTime.now().millisecondsSinceEpoch}',
+        titulo: titulo,
+        mensaje: mensaje,
+        tipo: tipo,
+      );
+      return false;
     } catch (e) {
-      // Si falla el backend, mostrar local como fallback
+      print('=== PUSH ERROR: $e ===');
+      // Si falla la conexion, mostrar local como fallback
       await mostrarNotificacion(
         id: 'local_${DateTime.now().millisecondsSinceEpoch}',
         titulo: titulo,

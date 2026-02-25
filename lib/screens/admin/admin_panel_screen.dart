@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/database_service.dart';
+import '../../services/notification_service.dart';
 import '../unidades/unidades_screen.dart';
 import '../miembros/miembros_screen.dart';
 import '../calendario/calendario_screen.dart';
@@ -85,7 +86,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 crossAxisCount: 3,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 0.95,
+                childAspectRatio: 0.85,
                 children: [
                   _buildActionCard(
                     context,
@@ -135,6 +136,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     label: 'Cuentas',
                     color: Colors.indigo,
                     onTap: () => _navTo(const GestionCuentasScreen()),
+                  ),
+                  _buildActionCard(
+                    context,
+                    icon: Icons.campaign,
+                    label: 'Enviar\nAviso',
+                    color: Colors.red,
+                    onTap: _mostrarDialogoAviso,
                   ),
                 ],
               ),
@@ -204,6 +212,85 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _mostrarDialogoAviso() {
+    final tituloCtrl = TextEditingController();
+    final mensajeCtrl = TextEditingController();
+    String topicSeleccionado = 'todos';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Enviar Aviso Push'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: tituloCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Titulo',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: mensajeCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Mensaje',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: topicSeleccionado,
+                  decoration: const InputDecoration(
+                    labelText: 'Enviar a',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'todos', child: Text('Todos')),
+                    DropdownMenuItem(value: 'consejero', child: Text('Consejeros')),
+                    DropdownMenuItem(value: 'aspirante', child: Text('Aspirantes')),
+                    DropdownMenuItem(value: 'admin', child: Text('Admins')),
+                  ],
+                  onChanged: (v) => setDialogState(() => topicSeleccionado = v!),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton.icon(
+              icon: const Icon(Icons.send),
+              label: const Text('Enviar'),
+              onPressed: () async {
+                if (tituloCtrl.text.isEmpty || mensajeCtrl.text.isEmpty) return;
+                Navigator.pop(ctx);
+                final ok = await NotificationService().enviarPushNotification(
+                  titulo: tituloCtrl.text,
+                  mensaje: mensajeCtrl.text,
+                  topic: topicSeleccionado,
+                );
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(ok ? 'Aviso enviado' : 'Error al enviar'),
+                    backgroundColor: ok ? Colors.green : Colors.red,
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

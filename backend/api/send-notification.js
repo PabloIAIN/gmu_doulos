@@ -1,20 +1,43 @@
 const admin = require('firebase-admin');
 
-// Inicializar Firebase Admin (usa la variable de entorno FIREBASE_SERVICE_ACCOUNT)
-if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+// Inicializar Firebase Admin de forma segura
+let initError = null;
+try {
+  if (!admin.apps.length) {
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT env var not set');
+    }
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  }
+} catch (e) {
+  initError = e.message;
+  console.error('Firebase init error:', e.message);
 }
 
 module.exports = async (req, res) => {
-  // Solo POST
+  // Health check con GET
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      status: initError ? 'error' : 'ok',
+      initError: initError || null,
+      hasApiKey: !!process.env.API_KEY,
+      hasServiceAccount: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+    });
+  }
+
+  // Solo POST para enviar
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Solo se acepta POST' });
   }
 
-  // Verificar API key simple
+  if (initError) {
+    return res.status(500).json({ error: 'Firebase no inicializado: ' + initError });
+  }
+
+  // Verificar API key
   const apiKey = req.headers['x-api-key'];
   if (apiKey !== process.env.API_KEY) {
     return res.status(401).json({ error: 'No autorizado' });

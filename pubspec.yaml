@@ -43,6 +43,17 @@ dependencies:
   # HTTP
   http: ^1.2.0
 
+  # Tipografia
+  google_fonts: ^6.1.0
+
+  # Graficas
+  fl_chart: ^0.69.0
+
+  # PDF y compartir
+  pdf: ^3.11.1
+  share_plus: ^10.1.4
+  open_filex: ^4.5.0
+
   # Autenticación
   crypto: ^3.0.3
 
@@ -53,11 +64,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
-  # Fuentes personalizadas (opcional)
-  # fonts:
-  #   - family: Poppins
-  #     fonts:
-  #       - asset: assets/fonts/Poppins-Regular.ttf
-  #       - asset: assets/fonts/Poppins-Bold.ttf
-  #         weight: 700x
+
+  assets:
+    - assets/images/

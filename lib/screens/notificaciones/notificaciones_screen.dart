@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/database_service.dart';
 import '../../services/notification_service.dart';
+import '../../theme/app_theme.dart';
 
 class NotificacionesScreen extends StatefulWidget {
   const NotificacionesScreen({super.key});
@@ -217,6 +219,8 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         onPressed: () => _showCrearRecordatorio(context),
         icon: const Icon(Icons.add_alarm),
         label: const Text('Recordatorio'),
+        backgroundColor: AppTheme.primaryGreen,
+        foregroundColor: Colors.white,
       ),
     );
   }
@@ -312,7 +316,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         elevation: leida ? 0 : 2,
         color: leida
             ? null
-            : Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+            : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () async {
@@ -331,7 +335,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, color: color, size: 24),
@@ -388,7 +392,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
+                              color: color.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -439,7 +443,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: color, size: 28),
@@ -451,9 +455,9 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                     children: [
                       Text(
                         notif['titulo'],
-                        style: const TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
@@ -572,10 +576,10 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                 children: [
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'Nuevo Recordatorio',
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.poppins(
+                            fontSize: 22, fontWeight: FontWeight.w700),
                       ),
                       const Spacer(),
                       IconButton(
@@ -604,7 +608,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: tipoSeleccionado,
+                    initialValue: tipoSeleccionado,
                     decoration: const InputDecoration(
                       labelText: 'Tipo',
                       prefixIcon: Icon(Icons.category),
@@ -686,7 +690,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: () async {
                         if (tituloCtrl.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -709,14 +713,16 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Recordatorio creado'),
-                              backgroundColor: Colors.green,
+                              backgroundColor: AppTheme.successGreen,
                             ),
                           );
                         }
                       },
                       icon: const Icon(Icons.add_alarm),
                       label: const Text('Crear Recordatorio'),
-                      style: ElevatedButton.styleFrom(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),

@@ -143,7 +143,7 @@ class _ConsejeroUnidadScreenState extends State<ConsejeroUnidadScreen> {
                                         backgroundColor: Theme.of(context)
                                             .colorScheme
                                             .primary
-                                            .withOpacity(0.1),
+                                            .withValues(alpha: 0.1),
                                         child: Text(
                                           iniciales,
                                           style: TextStyle(
@@ -181,7 +181,7 @@ class _ConsejeroUnidadScreenState extends State<ConsejeroUnidadScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(
-                                          color: Colors.green.withOpacity(0.1),
+                                          color: Colors.green.withValues(alpha: 0.1),
                                           borderRadius:
                                               BorderRadius.circular(8),
                                         ),

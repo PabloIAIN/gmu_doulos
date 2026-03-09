@@ -279,25 +279,45 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
                         _buildResumen(),
                         _buildBotonesRapidos(),
                         Expanded(child: _buildListaMiembros()),
+                        // Boton guardar fijo abajo
+                        if (_diaSemana.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              border: Border(
+                                top: BorderSide(color: Colors.grey.shade200),
+                              ),
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: FilledButton.icon(
+                                onPressed: _guardando ? null : _guardarAsistencia,
+                                icon: _guardando
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2, color: Colors.white),
+                                      )
+                                    : const Icon(Icons.save_rounded),
+                                label: Text(
+                                  _guardando ? 'Guardando...' : 'Guardar Asistencia',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryGreen,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
-      floatingActionButton: (_unidadSeleccionada != null &&
-              _miembrosUnidad.isNotEmpty &&
-              _diaSemana.isNotEmpty &&
-              !_isLoading)
-          ? FloatingActionButton.extended(
-              onPressed: _guardando ? null : _guardarAsistencia,
-              icon: _guardando
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.save),
-              label: Text(_guardando ? 'Guardando...' : 'Guardar'),
-            )
-          : null,
     );
   }
 
@@ -577,7 +597,7 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
 
                 // Pañoleta
                 _buildSwitchRow(
-                  icon: Icons.checkroom,
+                  icon: Icons.dry_cleaning,
                   label: 'Panoleta',
                   value: data['panoleta'] as bool,
                   color: Colors.indigo,

@@ -769,6 +769,62 @@ class DatabaseService {
     return result.map((r) => r['fecha'] as String).toList();
   }
 
+  // ── Estadisticas para graficas ──
+
+  /// Asistencia por fecha (ultimas N fechas) - para grafica de linea
+  Future<List<Map<String, dynamic>>> getAsistenciaPorFechas({int limit = 10}) async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT fecha,
+        COUNT(*) as total,
+        SUM(CASE WHEN puntualidad = 'presente' THEN 1 ELSE 0 END) as presentes,
+        SUM(CASE WHEN puntualidad = 'tardanza' THEN 1 ELSE 0 END) as tardanzas,
+        SUM(CASE WHEN puntualidad = 'ausente' THEN 1 ELSE 0 END) as ausentes
+      FROM asistencia
+      GROUP BY fecha
+      ORDER BY fecha DESC
+      LIMIT ?
+    ''', [limit]);
+  }
+
+  /// Distribucion de roles - para grafica de pie
+  Future<List<Map<String, dynamic>>> getDistribucionRoles() async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT rol, COUNT(*) as count
+      FROM miembros
+      WHERE activo = 1
+      GROUP BY rol
+      ORDER BY count DESC
+    ''');
+  }
+
+  /// Asistencia por unidad - para grafica de barras
+  Future<List<Map<String, dynamic>>> getAsistenciaPorUnidad() async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT u.nombre as unidad,
+        COUNT(*) as total,
+        SUM(CASE WHEN a.puntualidad IN ('presente', 'tardanza') THEN 1 ELSE 0 END) as asistieron
+      FROM asistencia a
+      JOIN unidades u ON a.unidad_id = u.id
+      GROUP BY a.unidad_id
+      ORDER BY u.nombre ASC
+    ''');
+  }
+
+  /// Miembros por clase - para grafica de pie
+  Future<List<Map<String, dynamic>>> getDistribucionClases() async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT clase, COUNT(*) as count
+      FROM miembros
+      WHERE activo = 1
+      GROUP BY clase
+      ORDER BY count DESC
+    ''');
+  }
+
   // ==================== ESPECIALIDADES ====================
 
   Future<List<Map<String, dynamic>>> getEspecialidades() async {
@@ -1388,6 +1444,47 @@ class DatabaseService {
       'evidencias': evidencias.first['c'] as int,
       'unidades': unidades.first['c'] as int,
     };
+  }
+
+  // ==================== IMPORTAR DATOS ====================
+
+  Future<Map<String, int>> importarDatosJson(String jsonString) async {
+    final db = await database;
+    final data = json.decode(jsonString) as Map<String, dynamic>;
+    final counts = <String, int>{};
+
+    // Tablas en orden para respetar foreign keys
+    final tablas = [
+      'miembros',
+      'eventos',
+      'especialidades',
+      'unidades',
+      'unidad_miembros',
+      'asistencia',
+      'miembro_especialidad',
+      'carpeta_progreso',
+      'configuracion',
+    ];
+
+    for (final tabla in tablas) {
+      final registros = data[tabla] as List<dynamic>?;
+      if (registros == null || registros.isEmpty) continue;
+      int insertados = 0;
+      for (final r in registros) {
+        try {
+          await db.insert(
+            tabla,
+            Map<String, dynamic>.from(r as Map),
+            conflictAlgorithm: ConflictAlgorithm.ignore,
+          );
+          insertados++;
+        } catch (_) {
+          // Ignorar registros con conflictos
+        }
+      }
+      counts[tabla] = insertados;
+    }
+    return counts;
   }
 
   // ==================== UTILIDADES ====================

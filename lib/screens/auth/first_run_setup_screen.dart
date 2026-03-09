@@ -110,7 +110,7 @@ class _FirstRunSetupScreenState extends State<FirstRunSetupScreen> {
                     'Configuracion Inicial',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha:0.8),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -123,7 +123,7 @@ class _FirstRunSetupScreenState extends State<FirstRunSetupScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha:0.15),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -365,19 +365,19 @@ class _FirstRunSetupScreenState extends State<FirstRunSetupScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha:0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.info_outline,
-                            color: Colors.white.withOpacity(0.8), size: 16),
+                            color: Colors.white.withValues(alpha:0.8), size: 16),
                         const SizedBox(width: 8),
                         Text(
                           'Esta cuenta tendra rol de Director',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha:0.8),
                             fontSize: 12,
                           ),
                         ),

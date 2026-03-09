@@ -253,7 +253,7 @@ class _MapasScreenState extends State<MapasScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha:0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color),
@@ -355,7 +355,7 @@ class _MapasScreenState extends State<MapasScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategoria,
+                    initialValue: selectedCategoria,
                     decoration: const InputDecoration(
                       labelText: 'Categoría',
                       prefixIcon: Icon(Icons.category),

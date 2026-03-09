@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/evento.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
+import '../../theme/app_theme.dart';
 
 class CalendarioScreen extends StatefulWidget {
   final VoidCallback? onOpenDrawer;
@@ -120,7 +122,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: _cargarEventos,
           ),
         ],
@@ -150,10 +152,10 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                       Text(
                         hayEventosHoy
                             ? 'Eventos del ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'
-                            : 'Próximos Eventos',
-                        style: const TextStyle(
+                            : 'Proximos Eventos',
+                        style: GoogleFonts.poppins(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
@@ -185,6 +187,8 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
               onPressed: () => _showEventoFormDialog(context),
               icon: const Icon(Icons.add),
               label: const Text('Nuevo Evento'),
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
             )
           : null,
     );
@@ -227,7 +231,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                 width: 50,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: _getTipoColor(evento.tipo).withOpacity(0.1),
+                  color: _getTipoColor(evento.tipo).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -301,10 +305,10 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: evento.yaPaso
-                      ? Colors.grey.withOpacity(0.1)
+                      ? Colors.grey.withValues(alpha: 0.1)
                       : diasRestantes <= 3
-                          ? Colors.red.withOpacity(0.1)
-                          : Colors.green.withOpacity(0.1),
+                          ? Colors.red.withValues(alpha: 0.1)
+                          : Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -356,7 +360,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: _getTipoColor(evento.tipo).withOpacity(0.1),
+                    color: _getTipoColor(evento.tipo).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -372,9 +376,9 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                     children: [
                       Text(
                         evento.titulo,
-                        style: const TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
@@ -528,7 +532,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                     children: [
                       Text(
                         isEditing ? 'Editar Evento' : 'Nuevo Evento',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700),
                       ),
                       const Spacer(),
                       IconButton(
@@ -558,7 +562,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedTipo,
+                    initialValue: selectedTipo,
                     decoration: const InputDecoration(
                       labelText: 'Tipo de evento',
                       prefixIcon: Icon(Icons.category),
@@ -631,11 +635,11 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: () async {
                         if (tituloController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('El título es obligatorio')),
+                            const SnackBar(content: Text('El titulo es obligatorio')),
                           );
                           return;
                         }
@@ -659,14 +663,16 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(isEditing ? 'Evento actualizado' : 'Evento creado'),
-                              backgroundColor: Colors.green,
+                              backgroundColor: AppTheme.successGreen,
                             ),
                           );
                         }
                       },
                       icon: Icon(isEditing ? Icons.save : Icons.add),
                       label: Text(isEditing ? 'Guardar cambios' : 'Crear evento'),
-                      style: ElevatedButton.styleFrom(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),

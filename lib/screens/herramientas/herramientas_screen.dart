@@ -85,7 +85,7 @@ class HerramientasScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: (h['color'] as Color).withOpacity(0.1),
+                  color: (h['color'] as Color).withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
@@ -202,10 +202,10 @@ class _BrujulaScreenState extends State<BrujulaScreen> {
                 height: 250,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha:0.1),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -342,7 +342,7 @@ class _LinternaScreenState extends State<LinternaScreen> {
                   boxShadow: _isOn
                       ? [
                           BoxShadow(
-                            color: Colors.amber.withOpacity(0.5),
+                            color: Colors.amber.withValues(alpha:0.5),
                             blurRadius: 50,
                             spreadRadius: 20,
                           ),
@@ -502,7 +502,7 @@ class _CronometroScreenState extends State<CronometroScreen> {
               child: Container(
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: ListView.separated(
@@ -632,7 +632,7 @@ class _SilbatoScreenState extends State<SilbatoScreen>
                     boxShadow: _activo
                         ? [
                             BoxShadow(
-                              color: Colors.red.withOpacity(0.5),
+                              color: Colors.red.withValues(alpha:0.5),
                               blurRadius: 40,
                               spreadRadius: 10,
                             ),
@@ -778,8 +778,8 @@ class _NivelScreenState extends State<NivelScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: _isLevel
-                                ? Colors.green.withOpacity(0.7)
-                                : Colors.red.withOpacity(0.7),
+                                ? Colors.green.withValues(alpha:0.7)
+                                : Colors.red.withValues(alpha:0.7),
                             border: Border.all(
                               color: _isLevel ? Colors.green : Colors.red,
                               width: 2,
@@ -812,8 +812,8 @@ class _NivelScreenState extends State<NivelScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: _xAngle.abs() < 2
-                                ? Colors.green.withOpacity(0.7)
-                                : Colors.orange.withOpacity(0.7),
+                                ? Colors.green.withValues(alpha:0.7)
+                                : Colors.orange.withValues(alpha:0.7),
                           ),
                         ),
                       ),

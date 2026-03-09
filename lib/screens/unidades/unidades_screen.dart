@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/database_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/user_avatar.dart';
 
 class UnidadesScreen extends StatefulWidget {
   const UnidadesScreen({super.key});
@@ -66,7 +69,7 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
           children: [
             Text(
               isEdit ? 'Editar Unidad' : 'Nueva Unidad',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 20),
             TextField(
@@ -193,6 +196,8 @@ class _UnidadesScreenState extends State<UnidadesScreen> {
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _mostrarFormulario(),
+        backgroundColor: AppTheme.primaryGreen,
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );
@@ -289,7 +294,7 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
             padding: const EdgeInsets.all(16),
             child: Text(
               'Asignar ${rolEnUnidad == 'consejero' ? 'Consejero' : 'Aspirante'}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700),
             ),
           ),
           const Divider(height: 0),
@@ -300,11 +305,10 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
               itemBuilder: (_, i) {
                 final m = filtrados[i];
                 return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(
-                      '${(m['nombre'] as String)[0]}${(m['apellido'] as String)[0]}'
-                          .toUpperCase(),
-                    ),
+                  leading: UserAvatar(
+                    fotoUrl: m['foto_url'] as String?,
+                    iniciales: '${(m['nombre'] as String)[0]}${(m['apellido'] as String)[0]}'.toUpperCase(),
+                    radius: 20,
                   ),
                   title: Text('${m['nombre']} ${m['apellido']}'),
                   subtitle: Text(m['rol'] as String),
@@ -372,9 +376,9 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Consejeros',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('Consejeros',
+                          style: GoogleFonts.poppins(
+                              fontSize: 18, fontWeight: FontWeight.w700)),
                       TextButton.icon(
                         onPressed: _consejeros.length >= 2
                             ? null
@@ -423,8 +427,8 @@ class _UnidadDetalleScreenState extends State<_UnidadDetalleScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Aspirantes (${_aspirantes.length}/12)',
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
+                          style: GoogleFonts.poppins(
+                              fontSize: 18, fontWeight: FontWeight.w700)),
                       TextButton.icon(
                         onPressed: _aspirantes.length >= 12
                             ? null

@@ -21,11 +21,20 @@ import 'screens/carpeta/carpeta_approve_screen.dart';
 import 'screens/carpeta/carpeta_manage_screen.dart';
 import 'screens/admin/admin_panel_screen.dart';
 import 'screens/admin/gestion_cuentas_screen.dart';
+import 'screens/perfil/perfil_screen.dart';
+import 'screens/estadisticas/estadisticas_screen.dart';
+import 'screens/reportes/reportes_screen.dart';
+import 'screens/busqueda/busqueda_screen.dart';
+import 'screens/onboarding/onboarding_screen.dart';
+
+// Widgets
+import 'widgets/user_avatar.dart';
 
 // Servicios
 import 'services/notification_service.dart'
     show NotificationService, firebaseMessagingBackgroundHandler;
 import 'services/auth_service.dart';
+import 'services/database_service.dart';
 
 // Tema
 import 'theme/app_theme.dart';
@@ -51,9 +60,24 @@ class GMUDoulosApp extends StatefulWidget {
 
 class _GMUDoulosAppState extends State<GMUDoulosApp> {
   bool _darkMode = false;
+  final DatabaseService _db = DatabaseService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDarkMode();
+  }
+
+  Future<void> _loadDarkMode() async {
+    final saved = await _db.getConfig('dark_mode');
+    if (saved == 'true' && mounted) {
+      setState(() => _darkMode = true);
+    }
+  }
 
   void toggleDarkMode(bool value) {
     setState(() => _darkMode = value);
+    _db.setConfig('dark_mode', value.toString());
   }
 
   @override
@@ -89,9 +113,11 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   final AuthService _auth = AuthService();
+  final DatabaseService _db = DatabaseService();
   bool _isChecking = true;
   bool _isFirstRun = false;
   bool _isLoggedIn = false;
+  bool _showOnboarding = false;
 
   @override
   void initState() {
@@ -103,8 +129,11 @@ class _AuthGateState extends State<AuthGate> {
     try {
       final firstRun = await _auth.isFirstRun();
       if (firstRun) {
+        // Check if onboarding was already shown
+        final onboardingSeen = await _db.getConfig('onboarding_seen');
         setState(() {
-          _isFirstRun = true;
+          _showOnboarding = onboardingSeen != 'true';
+          _isFirstRun = !_showOnboarding;
           _isChecking = false;
         });
         return;
@@ -117,6 +146,14 @@ class _AuthGateState extends State<AuthGate> {
     } catch (e) {
       setState(() => _isChecking = false);
     }
+  }
+
+  void _onOnboardingComplete() {
+    _db.setConfig('onboarding_seen', 'true');
+    setState(() {
+      _showOnboarding = false;
+      _isFirstRun = true;
+    });
   }
 
   void _onSetupComplete() {
@@ -138,24 +175,11 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     if (_isChecking) {
-      return const Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.shield, size: 64, color: AppTheme.primaryGreen),
-              SizedBox(height: 16),
-              Text('GMU Doulos',
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryGreen)),
-              SizedBox(height: 24),
-              CircularProgressIndicator(),
-            ],
-          ),
-        ),
-      );
+      return const _SplashScreen();
+    }
+
+    if (_showOnboarding) {
+      return OnboardingScreen(onComplete: _onOnboardingComplete);
     }
 
     if (_isFirstRun) {
@@ -332,71 +356,145 @@ class _MainNavigationState extends State<MainNavigation> {
     return Drawer(
       child: Column(
         children: [
+          // ── Header con gradiente y decoracion ──
           DrawerHeader(
-            decoration: BoxDecoration(
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.zero,
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                  AppTheme.primaryGreenDark,
+                  AppTheme.primaryGreen,
+                  Color(0xFF43A047),
                 ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: Colors.white,
-                  child: Text(
-                    user?.iniciales ?? 'U',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                // Circulos decorativos
+                Positioned(
+                  right: -20,
+                  top: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Text(nombre,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
-                Text(rol,
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                Positioned(
+                  right: 40,
+                  bottom: -30,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.06),
+                    ),
+                  ),
+                ),
+                // Contenido
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Avatar con borde (tappable para ir al perfil)
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PerfilScreen()));
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2.5),
+                          ),
+                          child: UserAvatar(
+                            fotoUrl: user?.fotoUrl,
+                            iniciales: user?.iniciales ?? 'U',
+                            radius: 30,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        nombre,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Rol como pill badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          rol,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
+
+          // ── Items del drawer ──
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                // ── Comunes: Inicio ──
-                _drawerItem(Icons.home, 'Inicio', () => _goTab(0)),
+                // ── Comunes: Inicio y Busqueda ──
+                _drawerItem(Icons.home_rounded, 'Inicio', () => _goTab(0)),
+                _drawerItem(Icons.search_rounded, 'Buscar',
+                    () => _pushScreen(const BusquedaScreen())),
 
                 // ── Admin ──
                 if (_auth.isAdmin) ...[
-                  _drawerItem(Icons.people, 'Miembros', () => _goTab(1)),
-                  _drawerItem(Icons.group_work, 'Unidades',
+                  _drawerItem(Icons.people_rounded, 'Miembros', () => _goTab(1)),
+                  _drawerItem(Icons.group_work_rounded, 'Unidades',
                       () => _pushScreen(const UnidadesScreen())),
                   _drawerItem(
-                      Icons.calendar_month, 'Calendario', () => _goTab(2)),
-                  _drawerItem(Icons.fact_check, 'Asistencia',
+                      Icons.calendar_month_rounded, 'Calendario', () => _goTab(2)),
+                  _drawerItem(Icons.fact_check_rounded, 'Asistencia',
                       () => _pushScreen(const AsistenciaScreen())),
-                  _drawerItem(Icons.folder_copy, 'Gestionar Carpeta',
+                  _drawerItem(Icons.folder_copy_rounded, 'Gestionar Carpeta',
                       () => _pushScreen(const CarpetaManageScreen())),
-                  _drawerItem(Icons.approval, 'Aprobar Carpetas',
+                  _drawerItem(Icons.approval_rounded, 'Aprobar Carpetas',
                       () => _pushScreen(const CarpetaApproveScreen())),
-                  _drawerItem(Icons.notifications, 'Notificaciones',
+                  _drawerItem(Icons.notifications_rounded, 'Notificaciones',
                       () => _pushScreen(const NotificacionesScreen())),
-                  const Divider(),
-                  _drawerItem(Icons.manage_accounts, 'Gestion de Cuentas',
+                  _drawerItem(Icons.bar_chart_rounded, 'Estadisticas',
+                      () => _pushScreen(const EstadisticasScreen())),
+                  _drawerItem(Icons.picture_as_pdf_rounded, 'Reportes',
+                      () => _pushScreen(const ReportesScreen())),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Divider(height: 16),
+                  ),
+                  _drawerItem(Icons.person_rounded, 'Mi Perfil',
+                      () => _pushScreen(const PerfilScreen())),
+                  _drawerItem(Icons.manage_accounts_rounded, 'Gestion de Cuentas',
                       () => _pushScreen(const GestionCuentasScreen())),
                   _drawerItem(
-                    Icons.settings,
+                    Icons.settings_rounded,
                     'Ajustes',
                     () => _pushScreen(AjustesScreen(
                       darkMode: widget.darkMode,
@@ -408,47 +506,70 @@ class _MainNavigationState extends State<MainNavigation> {
                 // ── Consejero ──
                 if (_auth.isConsejero) ...[
                   _drawerItem(
-                      Icons.group, 'Mi Unidad', () => _goTab(1)),
+                      Icons.group_rounded, 'Mi Unidad', () => _goTab(1)),
                   _drawerItem(
-                      Icons.calendar_month, 'Calendario', () => _goTab(2)),
-                  _drawerItem(Icons.fact_check, 'Asistencia',
+                      Icons.calendar_month_rounded, 'Calendario', () => _goTab(2)),
+                  _drawerItem(Icons.fact_check_rounded, 'Asistencia',
                       () => _pushScreen(const AsistenciaScreen())),
-                  _drawerItem(Icons.folder_special, 'Revisar Carpetas',
+                  _drawerItem(Icons.folder_special_rounded, 'Revisar Carpetas',
                       () => _pushScreen(const CarpetaReviewScreen())),
                   _drawerItem(
-                      Icons.menu_book, 'Manual', () => _goTab(3)),
-                  _drawerItem(Icons.notifications, 'Notificaciones',
+                      Icons.menu_book_rounded, 'Manual', () => _goTab(3)),
+                  _drawerItem(Icons.notifications_rounded, 'Notificaciones',
                       () => _pushScreen(const NotificacionesScreen())),
+                  _drawerItem(Icons.person_rounded, 'Mi Perfil',
+                      () => _pushScreen(const PerfilScreen())),
                 ],
 
                 // ── Aspirante ──
                 if (_auth.isAspirante) ...[
                   _drawerItem(
-                      Icons.folder, 'Mi Carpeta', () => _goTab(1)),
+                      Icons.folder_rounded, 'Mi Carpeta', () => _goTab(1)),
                   _drawerItem(
-                      Icons.calendar_month, 'Calendario', () => _goTab(2)),
+                      Icons.calendar_month_rounded, 'Calendario', () => _goTab(2)),
                   _drawerItem(
-                      Icons.menu_book, 'Manual', () => _goTab(3)),
-                  _drawerItem(Icons.notifications, 'Notificaciones',
+                      Icons.menu_book_rounded, 'Manual', () => _goTab(3)),
+                  _drawerItem(Icons.notifications_rounded, 'Notificaciones',
                       () => _pushScreen(const NotificacionesScreen())),
+                  _drawerItem(Icons.person_rounded, 'Mi Perfil',
+                      () => _pushScreen(const PerfilScreen())),
                 ],
 
                 // ── Cerrar sesion ──
-                const Divider(),
-                _drawerItem(Icons.logout, 'Cerrar Sesion', () {
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Divider(height: 16),
+                ),
+                _drawerItem(Icons.logout_rounded, 'Cerrar Sesion', () {
                   Navigator.pop(context);
                   _showLogoutDialog(context);
-                }, color: Colors.red),
+                }, color: AppTheme.errorRed),
               ],
             ),
           ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'GMU Doulos v1.0.0\n© 2025 Pablo',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              textAlign: TextAlign.center,
+
+          // ── Footer refinado ──
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.grey.shade200),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.shield_rounded, size: 16, color: Colors.grey[400]),
+                const SizedBox(width: 6),
+                Text(
+                  'GMU Doulos v1.1.0',
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -458,11 +579,22 @@ class _MainNavigationState extends State<MainNavigation> {
 
   Widget _drawerItem(IconData icon, String title, VoidCallback onTap,
       {Color? color}) {
-    return ListTile(
-      leading: Icon(icon, color: color),
-      title:
-          Text(title, style: color != null ? TextStyle(color: color) : null),
-      onTap: onTap,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+      child: ListTile(
+        dense: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        leading: Icon(icon, color: color ?? Colors.grey[700], size: 22),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        onTap: onTap,
+      ),
     );
   }
 
@@ -480,6 +612,7 @@ class _MainNavigationState extends State<MainNavigation> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Cerrar Sesion'),
         content: const Text('Seguro que deseas cerrar sesion?'),
         actions: [
@@ -487,18 +620,158 @@ class _MainNavigationState extends State<MainNavigation> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancelar'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               widget.onLogout();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
               foregroundColor: Colors.white,
             ),
             child: const Text('Cerrar Sesion'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Splash Screen animado ──
+class _SplashScreen extends StatefulWidget {
+  const _SplashScreen();
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeIn;
+  late Animation<double> _scale;
+  late Animation<Offset> _slideUp;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..forward();
+
+    _fadeIn = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.6, curve: Curves.easeOut)),
+    );
+    _scale = Tween<double>(begin: 0.5, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.6, curve: Curves.elasticOut)),
+    );
+    _slideUp = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOut)),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppTheme.primaryGreenDark,
+              AppTheme.primaryGreen,
+              Color(0xFF43A047),
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Logo animado
+              FadeTransition(
+                opacity: _fadeIn,
+                child: ScaleTransition(
+                  scale: _scale,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.15),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.shield,
+                      size: 56,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Texto animado
+              SlideTransition(
+                position: _slideUp,
+                child: FadeTransition(
+                  opacity: _fadeIn,
+                  child: Column(
+                    children: [
+                      Text(
+                        'GMU Doulos',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '"Siervos de Cristo"',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              // Loading indicator
+              FadeTransition(
+                opacity: _fadeIn,
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

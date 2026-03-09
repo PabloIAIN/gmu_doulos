@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/miembro.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/user_avatar.dart';
 
 class EspecialidadesScreen extends StatefulWidget {
   const EspecialidadesScreen({super.key});
@@ -68,7 +71,7 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
         title: const Text('Especialidades'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: _cargarDatos,
           ),
         ],
@@ -141,6 +144,8 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
               onPressed: () => _showEspecialidadFormDialog(context),
               icon: const Icon(Icons.add),
               label: const Text('Nueva'),
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
             )
           : null,
     );
@@ -178,7 +183,7 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.emoji_events, color: Colors.orange),
@@ -208,7 +213,7 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
                       color: Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -292,8 +297,8 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
                     children: [
                       Text(
                         isEditing ? 'Editar Especialidad' : 'Nueva Especialidad',
-                        style: const TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.poppins(
+                            fontSize: 22, fontWeight: FontWeight.w700),
                       ),
                       const Spacer(),
                       IconButton(
@@ -312,9 +317,9 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategoria,
+                    initialValue: selectedCategoria,
                     decoration: const InputDecoration(
-                      labelText: 'Categoría',
+                      labelText: 'Categoria',
                       prefixIcon: Icon(Icons.category),
                     ),
                     isExpanded: true,
@@ -330,7 +335,7 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedNivel,
+                    initialValue: selectedNivel,
                     decoration: const InputDecoration(
                       labelText: 'Nivel',
                       prefixIcon: Icon(Icons.signal_cellular_alt),
@@ -353,7 +358,7 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: () async {
                         if (nombreController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -379,14 +384,14 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
                           await _db.insertEspecialidad(data);
                         }
                         await _cargarDatos();
-                        if (mounted) {
+                        if (context.mounted) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(isEditing
                                   ? 'Especialidad actualizada'
                                   : 'Especialidad creada'),
-                              backgroundColor: Colors.green,
+                              backgroundColor: AppTheme.successGreen,
                             ),
                           );
                         }
@@ -394,7 +399,9 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
                       icon: Icon(isEditing ? Icons.save : Icons.add),
                       label: Text(
                           isEditing ? 'Guardar cambios' : 'Crear especialidad'),
-                      style: ElevatedButton.styleFrom(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
@@ -422,7 +429,7 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
             onPressed: () async {
               await _db.deleteEspecialidad(esp['id']);
               await _cargarDatos();
-              if (mounted) {
+              if (context.mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -729,8 +736,10 @@ class _EspecialidadDetailSheetState extends State<_EspecialidadDetailSheet> {
             itemBuilder: (context, index) {
               final miembro = disponibles[index];
               return ListTile(
-                leading: CircleAvatar(
-                  child: Text(miembro.iniciales),
+                leading: UserAvatar(
+                  fotoUrl: miembro.fotoUrl,
+                  iniciales: miembro.iniciales,
+                  radius: 20,
                 ),
                 title: Text(miembro.nombreCompleto),
                 subtitle: Text(miembro.clase),

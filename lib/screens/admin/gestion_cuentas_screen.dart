@@ -186,7 +186,7 @@ class _GestionCuentasScreenState extends State<GestionCuentasScreen> {
                     child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: tieneCuenta
-                            ? AppTheme.successGreen.withOpacity(0.1)
+                            ? AppTheme.successGreen.withValues(alpha:0.1)
                             : Colors.grey[200],
                         child: Icon(
                           tieneCuenta

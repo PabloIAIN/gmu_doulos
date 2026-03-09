@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/database_service.dart';
+import '../../theme/app_theme.dart';
 
 class EvidenciasScreen extends StatefulWidget {
   const EvidenciasScreen({super.key});
@@ -99,10 +101,10 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
                 children: [
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'Nueva Evidencia',
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.poppins(
+                            fontSize: 22, fontWeight: FontWeight.w700),
                       ),
                       const Spacer(),
                       IconButton(
@@ -143,9 +145,9 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategoria,
+                    initialValue: selectedCategoria,
                     decoration: const InputDecoration(
-                      labelText: 'Categoría',
+                      labelText: 'Categoria',
                       prefixIcon: Icon(Icons.category),
                     ),
                     items: _categorias
@@ -161,7 +163,7 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: () async {
                         final data = {
                           'id': DateTime.now()
@@ -184,14 +186,16 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Evidencia guardada'),
-                              backgroundColor: Colors.green,
+                              backgroundColor: AppTheme.successGreen,
                             ),
                           );
                         }
                       },
                       icon: const Icon(Icons.save),
                       label: const Text('Guardar evidencia'),
-                      style: ElevatedButton.styleFrom(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
@@ -248,7 +252,7 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
         title: const Text('Evidencias'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: _cargarEvidencias,
           ),
         ],
@@ -326,6 +330,8 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
         onPressed: () => _showCameraOptions(context),
         icon: const Icon(Icons.camera_alt),
         label: const Text('Agregar'),
+        backgroundColor: AppTheme.primaryGreen,
+        foregroundColor: Colors.white,
       ),
     );
   }
@@ -374,7 +380,7 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _getCategoriaColor(categoria).withOpacity(0.85),
+                  color: _getCategoriaColor(categoria).withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -439,7 +445,7 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color:
-                              _getCategoriaColor(categoria).withOpacity(0.1),
+                              _getCategoriaColor(categoria).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -560,9 +566,9 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Agregar evidencia',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 24),
             Row(
@@ -615,7 +621,7 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, size: 40, color: color),

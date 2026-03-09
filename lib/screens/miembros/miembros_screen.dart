@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/miembro.dart';
 import '../../services/database_service.dart';
+import '../../widgets/user_avatar.dart';
+import '../asistencia/historial_asistencia_screen.dart';
 
 class MiembrosScreen extends StatefulWidget {
   final VoidCallback? onOpenDrawer;
@@ -15,6 +17,7 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
   final TextEditingController _searchController = TextEditingController();
   final DatabaseService _db = DatabaseService();
   String _filtroClase = 'Todos';
+  String _filtroRol = 'Todos';
   List<Miembro> _miembros = [];
   bool _isLoading = true;
 
@@ -48,7 +51,8 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
           .toLowerCase()
           .contains(_searchController.text.toLowerCase());
       final matchesClase = _filtroClase == 'Todos' || m.clase == _filtroClase;
-      return matchesSearch && matchesClase;
+      final matchesRol = _filtroRol == 'Todos' || m.rol == _filtroRol;
+      return matchesSearch && matchesClase && matchesRol;
     }).toList();
   }
 
@@ -93,16 +97,24 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
               onChanged: (value) => setState(() {}),
             ),
           ),
-          if (_filtroClase != 'Todos')
+          if (_filtroClase != 'Todos' || _filtroRol != 'Todos')
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
+              child: Wrap(
+                spacing: 8,
                 children: [
-                  Chip(
-                    label: Text(_filtroClase),
-                    onDeleted: () => setState(() => _filtroClase = 'Todos'),
-                    deleteIcon: const Icon(Icons.close, size: 18),
-                  ),
+                  if (_filtroClase != 'Todos')
+                    Chip(
+                      label: Text(_filtroClase),
+                      onDeleted: () => setState(() => _filtroClase = 'Todos'),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                    ),
+                  if (_filtroRol != 'Todos')
+                    Chip(
+                      label: Text(_filtroRol),
+                      onDeleted: () => setState(() => _filtroRol = 'Todos'),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                    ),
                 ],
               ),
             ),
@@ -170,17 +182,11 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              CircleAvatar(
+              UserAvatar(
+                fotoUrl: miembro.fotoUrl,
+                iniciales: miembro.iniciales,
                 radius: 28,
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(
-                  miembro.iniciales,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -198,7 +204,7 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color:
-                                _getClaseColor(miembro.clase).withOpacity(0.1),
+                                _getClaseColor(miembro.clase).withValues(alpha:0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -216,7 +222,7 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.1),
+                              color: Colors.amber.withValues(alpha:0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -294,33 +300,77 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
 
   void _showFilterDialog() {
     final clases = ['Todos', 'Guía Mayor Aspirante', 'Guía Mayor', 'Guía Mayor Avanzado'];
+    final roles = ['Todos', 'Miembro', 'Consejero', 'Instructor', 'Director', 'Director Asociado', 'Secretario', 'Tesorero'];
+
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Filtrar por clase',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: clases.map((clase) {
-                return FilterChip(
-                  label: Text(clase),
-                  selected: _filtroClase == clase,
-                  onSelected: (selected) {
-                    setState(() => _filtroClase = clase);
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-          ],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filtros',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  if (_filtroClase != 'Todos' || _filtroRol != 'Todos')
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _filtroClase = 'Todos';
+                          _filtroRol = 'Todos';
+                        });
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Limpiar filtros'),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Clase',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: clases.map((clase) {
+                  return FilterChip(
+                    label: Text(clase),
+                    selected: _filtroClase == clase,
+                    onSelected: (selected) {
+                      setState(() => _filtroClase = clase);
+                      setSheetState(() {});
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              const Text('Rol',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: roles.map((rol) {
+                  return FilterChip(
+                    label: Text(rol),
+                    selected: _filtroRol == rol,
+                    onSelected: (selected) {
+                      setState(() => _filtroRol = rol);
+                      setSheetState(() {});
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -341,17 +391,11 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
             controller: scrollController,
             children: [
               Center(
-                child: CircleAvatar(
+                child: UserAvatar(
+                  fotoUrl: miembro.fotoUrl,
+                  iniciales: miembro.iniciales,
                   radius: 50,
                   backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  child: Text(
-                    miembro.iniciales,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -375,6 +419,28 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
               _buildDetailRow(Icons.cake, 'Edad', '${miembro.edad} años'),
               _buildDetailRow(Icons.phone, 'Teléfono', miembro.telefono),
               _buildDetailRow(Icons.email, 'Email', miembro.email),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => HistorialAsistenciaScreen(
+                          miembroId: miembro.id,
+                          nombreCompleto: miembro.nombreCompleto,
+                          fotoUrl: miembro.fotoUrl,
+                          iniciales: miembro.iniciales,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.fact_check),
+                  label: const Text('Ver historial de asistencia'),
+                ),
+              ),
             ],
           ),
         ),
@@ -403,6 +469,7 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
 
   void _showAddMemberDialog(BuildContext context, {Miembro? miembro}) {
     final isEditing = miembro != null;
+    final formKey = GlobalKey<FormState>();
     final nombreController = TextEditingController(text: miembro?.nombre ?? '');
     final apellidoController = TextEditingController(text: miembro?.apellido ?? '');
     final telefonoController = TextEditingController(text: miembro?.telefono ?? '');
@@ -421,7 +488,9 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             child: SingleChildScrollView(
-              child: Column(
+              child: Form(
+                key: formKey,
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -434,16 +503,18 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  TextField(
+                  TextFormField(
                     controller: nombreController,
-                    decoration: const InputDecoration(labelText: 'Nombre', prefixIcon: Icon(Icons.person)),
+                    decoration: const InputDecoration(labelText: 'Nombre *', prefixIcon: Icon(Icons.person)),
                     textCapitalization: TextCapitalization.words,
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'El nombre es obligatorio' : null,
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  TextFormField(
                     controller: apellidoController,
-                    decoration: const InputDecoration(labelText: 'Apellido', prefixIcon: Icon(Icons.person_outline)),
+                    decoration: const InputDecoration(labelText: 'Apellido *', prefixIcon: Icon(Icons.person_outline)),
                     textCapitalization: TextCapitalization.words,
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'El apellido es obligatorio' : null,
                   ),
                   const SizedBox(height: 12),
                   InkWell(
@@ -462,20 +533,32 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  TextFormField(
                     controller: telefonoController,
                     decoration: const InputDecoration(labelText: 'Teléfono', prefixIcon: Icon(Icons.phone)),
                     keyboardType: TextInputType.phone,
+                    validator: (v) {
+                      if (v != null && v.isNotEmpty && v.length < 7) {
+                        return 'Ingresa un teléfono válido';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  TextFormField(
                     controller: emailController,
                     decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
                     keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v != null && v.isNotEmpty && !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v)) {
+                        return 'Ingresa un email válido';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedClase,
+                    initialValue: selectedClase,
                     decoration: const InputDecoration(labelText: 'Clase', prefixIcon: Icon(Icons.school)),
                     items: ['Guía Mayor Aspirante', 'Guía Mayor', 'Guía Mayor Avanzado']
                         .map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
@@ -483,7 +566,7 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedRol,
+                    initialValue: selectedRol,
                     decoration: const InputDecoration(labelText: 'Rol', prefixIcon: Icon(Icons.badge)),
                     items: ['Miembro', 'Consejero', 'Instructor', 'Director', 'Director Asociado', 'Secretario', 'Tesorero']
                         .map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
@@ -494,18 +577,14 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        if (nombreController.text.isEmpty || apellidoController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Nombre y apellido son obligatorios')));
-                          return;
-                        }
+                        if (!formKey.currentState!.validate()) return;
                         final nuevoMiembro = Miembro(
                           id: miembro?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                          nombre: nombreController.text,
-                          apellido: apellidoController.text,
+                          nombre: nombreController.text.trim(),
+                          apellido: apellidoController.text.trim(),
                           fechaNacimiento: selectedDate,
-                          telefono: telefonoController.text,
-                          email: emailController.text,
+                          telefono: telefonoController.text.trim(),
+                          email: emailController.text.trim(),
                           clase: selectedClase,
                           rol: selectedRol,
                           activo: true,
@@ -532,6 +611,7 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
                     ),
                   ),
                 ],
+              ),
               ),
             ),
           ),

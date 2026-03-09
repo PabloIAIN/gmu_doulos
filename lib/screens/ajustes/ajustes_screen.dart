@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqflite/sqflite.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/database_service.dart';
+import '../../theme/app_theme.dart';
+import 'backup_screen.dart';
 
 class AjustesScreen extends StatefulWidget {
   final bool darkMode;
@@ -166,22 +166,16 @@ class _AjustesScreenState extends State<AjustesScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.backup),
-                  title: const Text('Respaldo de datos'),
+                  title: const Text('Backup de datos'),
                   subtitle: Text(
                     _ultimoRespaldo != null
                         ? 'Último: ${_formatFechaRespaldo(_ultimoRespaldo!)}'
-                        : 'Último: Nunca',
+                        : 'Exportar e importar datos',
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: _crearRespaldo,
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.download),
-                  title: const Text('Exportar datos'),
-                  subtitle: const Text('Guardar como JSON'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: _exportarDatos,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupScreen()));
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -210,22 +204,30 @@ class _AjustesScreenState extends State<AjustesScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.info),
-                  title: const Text('Versión'),
-                  trailing: const Text('1.0.0'),
+                const ListTile(
+                  leading: Icon(Icons.info),
+                  title: Text('Version'),
+                  trailing: Text('1.1.0'),
                 ),
                 const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.code),
-                  title: const Text('Desarrollador'),
-                  trailing: const Text('Pablo'),
+                const ListTile(
+                  leading: Icon(Icons.code),
+                  title: Text('Desarrollador'),
+                  trailing: Text('Pablo'),
                 ),
                 const Divider(height: 1),
                 const ListTile(
                   leading: Icon(Icons.school),
                   title: Text('Universidad'),
                   subtitle: Text('Universidad de Montemorelos'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.new_releases),
+                  title: const Text('Novedades v1.1'),
+                  subtitle: const Text('Ver que hay de nuevo'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () => _mostrarNovedades(),
                 ),
               ],
             ),
@@ -237,25 +239,26 @@ class _AjustesScreenState extends State<AjustesScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Icon(Icons.shield, size: 40, color: Colors.grey[400]),
+                Icon(Icons.shield, size: 40, color: AppTheme.primaryGreen.withValues(alpha: 0.4)),
                 const SizedBox(height: 8),
                 Text(
                   _clubNombre,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
                     color: Colors.grey[600],
                   ),
                 ),
                 Text(
                   '"Siervos de Cristo"',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     color: Colors.grey[500],
                     fontStyle: FontStyle.italic,
+                    fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '© 2025 Programación de Dispositivos Móviles\nUniversidad de Montemorelos',
+                  '© 2025 Programacion de Dispositivos Moviles\nUniversidad de Montemorelos',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[500],
@@ -275,10 +278,10 @@ class _AjustesScreenState extends State<AjustesScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: TextStyle(
+        style: GoogleFonts.poppins(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.primary,
+          color: AppTheme.primaryGreen,
         ),
       ),
     );
@@ -325,110 +328,44 @@ class _AjustesScreenState extends State<AjustesScreen> {
     );
   }
 
-  Future<void> _crearRespaldo() async {
-    try {
-      _showLoadingDialog('Creando respaldo...');
-      final jsonData = await _db.exportarDatosJson();
-      final dbPath = await getDatabasesPath();
-      final fecha = DateTime.now();
-      final fileName = 'respaldo_gmu_${fecha.year}${fecha.month.toString().padLeft(2, '0')}${fecha.day.toString().padLeft(2, '0')}_${fecha.hour.toString().padLeft(2, '0')}${fecha.minute.toString().padLeft(2, '0')}.json';
-      final filePath = p.join(dbPath, fileName);
-      final file = File(filePath);
-      await file.writeAsString(jsonData);
-
-      await _db.setConfig('ultimo_respaldo', fecha.toIso8601String());
-      await _cargarConfiguracion();
-
-      if (mounted) {
-        Navigator.pop(context); // dismiss loading
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
-            title: const Text('Respaldo creado'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Archivo: $fileName'),
-                const SizedBox(height: 8),
-                Text(
-                  'Ubicación: $dbPath',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Aceptar'),
-              ),
+  void _mostrarNovedades() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.new_releases, color: AppTheme.primaryGreen),
+            const SizedBox(width: 8),
+            Text('Novedades v1.1',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              _NovedadItem(icon: Icons.search, text: 'Busqueda global en todo el club'),
+              _NovedadItem(icon: Icons.backup, text: 'Exportar e importar backups'),
+              _NovedadItem(icon: Icons.filter_list, text: 'Filtros avanzados por clase y rol'),
+              _NovedadItem(icon: Icons.fact_check, text: 'Historial de asistencia por miembro'),
+              _NovedadItem(icon: Icons.animation, text: 'Splash screen y animaciones'),
+              _NovedadItem(icon: Icons.verified, text: 'Validacion de formularios mejorada'),
+              _NovedadItem(icon: Icons.school, text: 'Onboarding para nuevos usuarios'),
+              _NovedadItem(icon: Icons.dark_mode, text: 'Modo oscuro persistente'),
+              _NovedadItem(icon: Icons.bar_chart, text: 'Estadisticas con graficas'),
+              _NovedadItem(icon: Icons.picture_as_pdf, text: 'Exportar reportes en PDF'),
             ],
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // dismiss loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al crear respaldo: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _exportarDatos() async {
-    try {
-      _showLoadingDialog('Exportando datos...');
-      final jsonData = await _db.exportarDatosJson();
-      final dbPath = await getDatabasesPath();
-      final filePath = p.join(dbPath, 'gmu_doulos_export.json');
-      final file = File(filePath);
-      await file.writeAsString(jsonData);
-
-      if (mounted) {
-        Navigator.pop(context); // dismiss loading
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            icon: const Icon(Icons.download_done, color: Colors.green, size: 48),
-            title: const Text('Datos exportados'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Se exportaron todos los datos en formato JSON.'),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    filePath,
-                    style: TextStyle(fontSize: 11, color: Colors.grey[700]),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Aceptar'),
-              ),
-            ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Genial!'),
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // dismiss loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al exportar: $e')),
-        );
-      }
-    }
+        ],
+      ),
+    );
   }
 
   Future<void> _mostrarResumen() async {
@@ -552,5 +489,26 @@ class _AjustesScreenState extends State<AjustesScreen> {
     final fecha = DateTime.tryParse(isoDate);
     if (fecha == null) return isoDate;
     return '${fecha.day}/${fecha.month}/${fecha.year} ${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _NovedadItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _NovedadItem({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppTheme.primaryGreen),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
+        ],
+      ),
+    );
   }
 }

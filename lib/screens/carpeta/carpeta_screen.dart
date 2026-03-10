@@ -428,7 +428,15 @@ class _CarpetaScreenState extends State<CarpetaScreen> {
                   onTap: () => _showFullImage(evidenciaPath),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.file(File(evidenciaPath), height: 200, width: double.infinity, fit: BoxFit.cover),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      child: Image.file(
+                        File(evidenciaPath),
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey, size: 60),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -473,7 +481,19 @@ class _CarpetaScreenState extends State<CarpetaScreen> {
       builder: (_) => Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(backgroundColor: Colors.transparent, iconTheme: const IconThemeData(color: Colors.white)),
-        body: Center(child: InteractiveViewer(child: Image.file(File(path)))),
+        body: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: SizedBox.expand(
+            child: Image.file(
+              File(path),
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Center(
+                child: Icon(Icons.broken_image, color: Colors.grey, size: 80),
+              ),
+            ),
+          ),
+        ),
       ),
     ));
   }

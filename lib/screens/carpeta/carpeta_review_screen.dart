@@ -404,7 +404,19 @@ class _CarpetaReviewDetailScreenState extends State<_CarpetaReviewDetailScreen> 
       builder: (_) => Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(backgroundColor: Colors.transparent, iconTheme: const IconThemeData(color: Colors.white)),
-        body: Center(child: InteractiveViewer(child: Image.file(File(path)))),
+        body: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: SizedBox.expand(
+            child: Image.file(
+              File(path),
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Center(
+                child: Icon(Icons.broken_image, color: Colors.grey, size: 80),
+              ),
+            ),
+          ),
+        ),
       ),
     ));
   }

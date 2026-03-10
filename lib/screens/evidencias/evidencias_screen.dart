@@ -226,23 +226,6 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
     }
   }
 
-  IconData _getCategoriaIcon(String categoria) {
-    switch (categoria) {
-      case 'Campamento':
-        return Icons.terrain;
-      case 'Reunión':
-        return Icons.groups;
-      case 'Especialidad':
-        return Icons.emoji_events;
-      case 'Actividad':
-        return Icons.directions_walk;
-      case 'Otro':
-        return Icons.photo;
-      default:
-        return Icons.photo;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final filtradas = _evidenciasFiltradas;
@@ -319,7 +302,7 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
                             ),
                             itemCount: filtradas.length,
                             itemBuilder: (context, index) {
-                              return _buildFotoThumbnail(filtradas[index]);
+                              return _buildFotoThumbnail(filtradas[index], index);
                             },
                           ),
                         ),
@@ -353,12 +336,12 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
     );
   }
 
-  Widget _buildFotoThumbnail(Map<String, dynamic> evidencia) {
+  Widget _buildFotoThumbnail(Map<String, dynamic> evidencia, int index) {
     final file = File(evidencia['foto_path'] as String);
     final categoria = evidencia['categoria'] as String;
 
     return GestureDetector(
-      onTap: () => _showFotoDetail(evidencia),
+      onTap: () => _showFullScreenImage(file, initialIndex: index),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Stack(
@@ -395,131 +378,23 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
     );
   }
 
-  void _showFotoDetail(Map<String, dynamic> evidencia) {
-    final file = File(evidencia['foto_path'] as String);
-    final titulo = evidencia['titulo'] as String?;
-    final descripcion = evidencia['descripcion'] as String?;
-    final categoria = evidencia['categoria'] as String;
-    final fecha = DateTime.tryParse(evidencia['fecha'] as String);
-    final fechaStr = fecha != null
-        ? '${fecha.day}/${fecha.month}/${fecha.year} - ${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}'
-        : '';
 
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Imagen
-            SizedBox(
-              height: 300,
-              width: double.infinity,
-              child: file.existsSync()
-                  ? GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showFullScreenImage(file);
-                      },
-                      child: Image.file(file, fit: BoxFit.cover),
-                    )
-                  : Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.broken_image, size: 80),
-                    ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(_getCategoriaIcon(categoria),
-                          color: _getCategoriaColor(categoria), size: 20),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color:
-                              _getCategoriaColor(categoria).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          categoria,
-                          style: TextStyle(
-                            color: _getCategoriaColor(categoria),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(fechaStr,
-                          style:
-                              TextStyle(color: Colors.grey[500], fontSize: 12)),
-                    ],
-                  ),
-                  if (titulo != null && titulo.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      titulo,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                  if (descripcion != null && descripcion.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(descripcion,
-                        style: TextStyle(color: Colors.grey[600])),
-                  ],
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cerrar'),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _confirmDelete(evidencia);
-                        },
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        label: const Text('Eliminar',
-                            style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+  void _showFullScreenImage(File file, {int? initialIndex}) {
+    final filtradas = _evidenciasFiltradas;
+    final startIndex = initialIndex ?? filtradas.indexWhere(
+      (e) => e['foto_path'] == file.path,
     );
-  }
 
-  void _showFullScreenImage(File file) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            iconTheme: const IconThemeData(color: Colors.white),
-          ),
-          body: Center(
-            child: InteractiveViewer(
-              child: Image.file(file),
-            ),
-          ),
+        builder: (context) => _FullScreenGallery(
+          evidencias: filtradas,
+          initialIndex: startIndex >= 0 ? startIndex : 0,
+          onDelete: (evidencia) {
+            Navigator.pop(context);
+            _confirmDelete(evidencia);
+          },
         ),
       ),
     );
@@ -628,6 +503,123 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
             ),
             const SizedBox(height: 8),
             Text(label),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Galería pantalla completa con swipe ──
+class _FullScreenGallery extends StatefulWidget {
+  final List<Map<String, dynamic>> evidencias;
+  final int initialIndex;
+  final void Function(Map<String, dynamic>) onDelete;
+
+  const _FullScreenGallery({
+    required this.evidencias,
+    required this.initialIndex,
+    required this.onDelete,
+  });
+
+  @override
+  State<_FullScreenGallery> createState() => _FullScreenGalleryState();
+}
+
+class _FullScreenGalleryState extends State<_FullScreenGallery> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        title: Text(
+          '${_currentIndex + 1} / ${widget.evidencias.length}',
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => _showInfo(widget.evidencias[_currentIndex]),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            onPressed: () => widget.onDelete(widget.evidencias[_currentIndex]),
+          ),
+        ],
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.evidencias.length,
+        onPageChanged: (i) => setState(() => _currentIndex = i),
+        itemBuilder: (context, index) {
+          final file = File(widget.evidencias[index]['foto_path'] as String);
+          return Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: file.existsSync()
+                  ? Image.file(file, fit: BoxFit.contain)
+                  : const Icon(Icons.broken_image, color: Colors.grey, size: 80),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showInfo(Map<String, dynamic> evidencia) {
+    final titulo = evidencia['titulo'] as String?;
+    final descripcion = evidencia['descripcion'] as String?;
+    final categoria = evidencia['categoria'] as String;
+    final fecha = DateTime.tryParse(evidencia['fecha'] as String);
+    final fechaStr = fecha != null
+        ? '${fecha.day}/${fecha.month}/${fecha.year} ${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}'
+        : '';
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.category, size: 18),
+                const SizedBox(width: 8),
+                Text(categoria, style: const TextStyle(fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Text(fechaStr, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+              ],
+            ),
+            if (titulo != null && titulo.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(titulo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+            if (descripcion != null && descripcion.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(descripcion, style: TextStyle(color: Colors.grey[600])),
+            ],
+            const SizedBox(height: 16),
           ],
         ),
       ),

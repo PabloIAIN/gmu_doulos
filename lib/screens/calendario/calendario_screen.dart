@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../models/evento.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
@@ -62,6 +65,47 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
       ..sort((a, b) => a.fecha.compareTo(b.fecha));
   }
 
+  Future<void> _exportarICS() async {
+    if (_eventos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay eventos para exportar')),
+      );
+      return;
+    }
+    try {
+      final buffer = StringBuffer();
+      buffer.writeln('BEGIN:VCALENDAR');
+      buffer.writeln('VERSION:2.0');
+      buffer.writeln('PRODID:-//GMU Doulos//Calendario//ES');
+      for (final evento in _eventos) {
+        final fecha = evento.fecha;
+        final fechaStr = '${fecha.year}${fecha.month.toString().padLeft(2, '0')}${fecha.day.toString().padLeft(2, '0')}';
+        buffer.writeln('BEGIN:VEVENT');
+        buffer.writeln('DTSTART;VALUE=DATE:$fechaStr');
+        buffer.writeln('SUMMARY:${evento.titulo}');
+        if (evento.descripcion.isNotEmpty) {
+          buffer.writeln('DESCRIPTION:${evento.descripcion}');
+        }
+        if (evento.ubicacion.isNotEmpty) {
+          buffer.writeln('LOCATION:${evento.ubicacion}');
+        }
+        buffer.writeln('END:VEVENT');
+      }
+      buffer.writeln('END:VCALENDAR');
+
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/gmu_doulos_eventos.ics');
+      await file.writeAsString(buffer.toString());
+      await Share.shareXFiles([XFile(file.path)], text: 'Eventos GMU Doulos');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al exportar: $e')),
+        );
+      }
+    }
+  }
+
   IconData _getTipoIcon(String tipo) {
     switch (tipo) {
       case 'reunion':
@@ -120,6 +164,11 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                 _selectedDate = DateTime.now();
               });
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.ios_share_outlined),
+            tooltip: 'Exportar .ics',
+            onPressed: _exportarICS,
           ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -218,7 +267,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   Widget _buildEventoCard(Evento evento) {
     final diasRestantes = evento.diasRestantes;
 
-    return Card(
+    final card = Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -334,6 +383,45 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
           ),
         ),
       ),
+    );
+
+    if (!_auth.isAdmin) return card;
+
+    return Dismissible(
+      key: Key(evento.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.red.shade400,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Eliminar evento'),
+            content: Text('¿Eliminar "${evento.titulo}"?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Eliminar'),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
+      onDismissed: (_) async {
+        await _db.deleteEvento(evento.id);
+        _cargarEventos();
+      },
+      child: card,
     );
   }
 

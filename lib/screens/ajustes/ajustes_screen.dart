@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/database_service.dart';
 import '../../theme/app_theme.dart';
+import 'audit_log_screen.dart';
 import 'backup_screen.dart';
 
 class AjustesScreen extends StatefulWidget {
@@ -175,6 +176,16 @@ class _AjustesScreenState extends State<AjustesScreen> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupScreen()));
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.history),
+                  title: const Text('Registro de actividad'),
+                  subtitle: const Text('Historial de cambios'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AuditLogScreen()));
                   },
                 ),
                 const Divider(height: 1),

@@ -22,7 +22,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'gmu_doulos.db');
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -217,6 +217,19 @@ class DatabaseService {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE audit_log(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        accion TEXT NOT NULL,
+        tabla TEXT NOT NULL,
+        registro_id TEXT,
+        descripcion TEXT,
+        usuario_id TEXT,
+        usuario_nombre TEXT,
+        fecha TEXT NOT NULL
+      )
+    ''');
+
     await _insertarDatosEjemplo(db);
     await _insertarDatosCarpeta(db);
   }
@@ -352,6 +365,20 @@ class DatabaseService {
       ''');
 
       await db.execute('DROP TABLE IF EXISTS asistencia_old');
+    }
+    if (oldVersion < 9) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS audit_log(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          accion TEXT NOT NULL,
+          tabla TEXT NOT NULL,
+          registro_id TEXT,
+          descripcion TEXT,
+          usuario_id TEXT,
+          usuario_nombre TEXT,
+          fecha TEXT NOT NULL
+        )
+      ''');
     }
   }
 
@@ -586,30 +613,51 @@ class DatabaseService {
 
   Future<int> insertMiembro(Miembro miembro) async {
     final db = await database;
-    return await db.insert(
+    final result = await db.insert(
       'miembros',
       miembro.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    await registrarAudit(
+      accion: 'crear',
+      tabla: 'miembros',
+      registroId: miembro.id,
+      descripcion: 'Miembro creado: ${miembro.nombre} ${miembro.apellido}',
+    );
+    return result;
   }
 
   Future<int> updateMiembro(Miembro miembro) async {
     final db = await database;
-    return await db.update(
+    final result = await db.update(
       'miembros',
       miembro.toMap(),
       where: 'id = ?',
       whereArgs: [miembro.id],
     );
+    await registrarAudit(
+      accion: 'editar',
+      tabla: 'miembros',
+      registroId: miembro.id,
+      descripcion: 'Miembro editado: ${miembro.nombre} ${miembro.apellido}',
+    );
+    return result;
   }
 
   Future<int> deleteMiembro(String id) async {
     final db = await database;
-    return await db.delete(
+    final result = await db.delete(
       'miembros',
       where: 'id = ?',
       whereArgs: [id],
     );
+    await registrarAudit(
+      accion: 'eliminar',
+      tabla: 'miembros',
+      registroId: id,
+      descripcion: 'Miembro eliminado',
+    );
+    return result;
   }
 
   Future<int> countMiembros() async {
@@ -648,19 +696,34 @@ class DatabaseService {
 
   Future<int> insertEvento(Evento evento) async {
     final db = await database;
-    return await db.insert('eventos', evento.toMap(),
+    final result = await db.insert('eventos', evento.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
+    await registrarAudit(
+      accion: 'crear', tabla: 'eventos', registroId: evento.id,
+      descripcion: 'Evento creado: ${evento.titulo}',
+    );
+    return result;
   }
 
   Future<int> updateEvento(Evento evento) async {
     final db = await database;
-    return await db.update('eventos', evento.toMap(),
+    final result = await db.update('eventos', evento.toMap(),
         where: 'id = ?', whereArgs: [evento.id]);
+    await registrarAudit(
+      accion: 'editar', tabla: 'eventos', registroId: evento.id,
+      descripcion: 'Evento editado: ${evento.titulo}',
+    );
+    return result;
   }
 
   Future<int> deleteEvento(String id) async {
     final db = await database;
-    return await db.delete('eventos', where: 'id = ?', whereArgs: [id]);
+    final result = await db.delete('eventos', where: 'id = ?', whereArgs: [id]);
+    await registrarAudit(
+      accion: 'eliminar', tabla: 'eventos', registroId: id,
+      descripcion: 'Evento eliminado',
+    );
+    return result;
   }
 
   Future<int> countEventos() async {
@@ -722,6 +785,11 @@ class DatabaseService {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
+    await registrarAudit(
+      accion: 'registrar', tabla: 'asistencia',
+      descripcion: 'Asistencia registrada: $fecha (${registros.length} miembros)',
+      usuarioId: registradoPor,
+    );
   }
 
   Future<double> getPorcentajeAsistencia() async {
@@ -1493,6 +1561,99 @@ class DatabaseService {
     final db = await database;
     await db.close();
     _database = null;
+  }
+
+  // ==================== AUDIT LOG ====================
+
+  Future<void> registrarAudit({
+    required String accion,
+    required String tabla,
+    String? registroId,
+    String? descripcion,
+    String? usuarioId,
+    String? usuarioNombre,
+  }) async {
+    final db = await database;
+    await db.insert('audit_log', {
+      'accion': accion,
+      'tabla': tabla,
+      'registro_id': registroId,
+      'descripcion': descripcion,
+      'usuario_id': usuarioId,
+      'usuario_nombre': usuarioNombre,
+      'fecha': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getAuditLog({int limit = 100}) async {
+    final db = await database;
+    return await db.query('audit_log', orderBy: 'fecha DESC', limit: limit);
+  }
+
+  // ==================== EXPORTAR CSV ====================
+
+  Future<String> exportarAsistenciaCSV({String? unidadId}) async {
+    final db = await database;
+    String query;
+    List<Object?>? args;
+
+    if (unidadId != null) {
+      query = '''
+        SELECT a.fecha, a.dia_semana, m.nombre, m.apellido, a.puntualidad,
+               a.panoleta, a.biblia, a.cuota, u.nombre as unidad
+        FROM asistencia a
+        JOIN miembros m ON a.miembro_id = m.id
+        JOIN unidades u ON a.unidad_id = u.id
+        WHERE a.unidad_id = ?
+        ORDER BY a.fecha DESC, m.nombre ASC
+      ''';
+      args = [unidadId];
+    } else {
+      query = '''
+        SELECT a.fecha, a.dia_semana, m.nombre, m.apellido, a.puntualidad,
+               a.panoleta, a.biblia, a.cuota, u.nombre as unidad
+        FROM asistencia a
+        JOIN miembros m ON a.miembro_id = m.id
+        JOIN unidades u ON a.unidad_id = u.id
+        ORDER BY a.fecha DESC, u.nombre ASC, m.nombre ASC
+      ''';
+    }
+
+    final rows = await db.rawQuery(query, args);
+
+    final buffer = StringBuffer();
+    buffer.writeln('Fecha,Dia,Unidad,Nombre,Apellido,Puntualidad,Panoleta,Biblia,Cuota');
+    for (final r in rows) {
+      buffer.writeln(
+        '${r['fecha']},${r['dia_semana']},${r['unidad']},'
+        '${r['nombre']},${r['apellido']},${r['puntualidad']},'
+        '${r['panoleta'] == 1 ? 'Si' : 'No'},'
+        '${r['biblia'] == 1 ? 'Si' : 'No'},'
+        '${r['cuota'] == 1 ? 'Si' : 'No'}',
+      );
+    }
+    return buffer.toString();
+  }
+
+  Future<String> exportarMiembrosCSV() async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT m.nombre, m.apellido, m.fecha_nacimiento, m.telefono, m.email,
+             m.clase, m.rol, m.activo, m.fecha_registro
+      FROM miembros m
+      ORDER BY m.nombre ASC
+    ''');
+
+    final buffer = StringBuffer();
+    buffer.writeln('Nombre,Apellido,Nacimiento,Telefono,Email,Clase,Rol,Activo,Registro');
+    for (final r in rows) {
+      buffer.writeln(
+        '${r['nombre']},${r['apellido']},${r['fecha_nacimiento']},'
+        '${r['telefono'] ?? ''},${r['email'] ?? ''},${r['clase']},'
+        '${r['rol']},${r['activo'] == 1 ? 'Si' : 'No'},${r['fecha_registro'] ?? ''}',
+      );
+    }
+    return buffer.toString();
   }
 
   Future<void> resetDatabase() async {

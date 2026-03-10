@@ -22,6 +22,8 @@ class _LoginScreenState extends State<LoginScreen>
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+  int _intentosFallidos = 0;
+  DateTime? _bloqueadoHasta;
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -59,6 +61,15 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Rate limiting: bloquear tras 5 intentos fallidos por 30 segundos
+    if (_bloqueadoHasta != null && DateTime.now().isBefore(_bloqueadoHasta!)) {
+      final segundos = _bloqueadoHasta!.difference(DateTime.now()).inSeconds;
+      setState(() {
+        _errorMessage = 'Demasiados intentos. Espera $segundos segundos.';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -73,10 +84,18 @@ class _LoginScreenState extends State<LoginScreen>
       if (!mounted) return;
 
       if (result != null) {
+        _intentosFallidos = 0;
+        _bloqueadoHasta = null;
         widget.onLoginSuccess();
       } else {
+        _intentosFallidos++;
+        if (_intentosFallidos >= 5) {
+          _bloqueadoHasta = DateTime.now().add(const Duration(seconds: 30));
+        }
         setState(() {
-          _errorMessage = 'Usuario o contrasena incorrectos';
+          _errorMessage = _intentosFallidos >= 5
+              ? 'Cuenta bloqueada temporalmente. Intenta en 30 segundos.'
+              : 'Usuario o contrasena incorrectos (${5 - _intentosFallidos} intentos restantes)';
           _isLoading = false;
         });
       }

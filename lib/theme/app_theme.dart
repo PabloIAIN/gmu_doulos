@@ -83,11 +83,13 @@ class AppTheme {
       ),
     ),
 
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: accentGold,
       foregroundColor: Colors.black,
       elevation: 2,
-      shape: CircleBorder(),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
     ),
 
     // Inputs — mas modernos
@@ -253,11 +255,13 @@ class AppTheme {
       ),
     ),
 
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: accentGold,
       foregroundColor: Colors.black,
       elevation: 2,
-      shape: CircleBorder(),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
     ),
 
     inputDecorationTheme: InputDecorationTheme(

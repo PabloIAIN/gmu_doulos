@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
@@ -29,6 +32,7 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
 
   bool _isLoading = true;
   bool _guardando = false;
+  bool _hayCambios = false;
 
   @override
   void initState() {
@@ -237,6 +241,7 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
             backgroundColor: AppTheme.successGreen,
           ),
         );
+        _hayCambios = false;
       }
     } catch (e) {
       if (mounted) {
@@ -248,6 +253,27 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
     setState(() => _guardando = false);
   }
 
+  Future<void> _exportarCSV() async {
+    try {
+      final csv = await _db.exportarAsistenciaCSV(
+        unidadId: _unidadSeleccionada?['id'] as String?,
+      );
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/asistencia_${DateTime.now().millisecondsSinceEpoch}.csv');
+      await file.writeAsString(csv);
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Asistencia GMU Doulos',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al exportar: $e')),
+        );
+      }
+    }
+  }
+
   String _formatFecha(DateTime fecha) {
     const dias = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -256,10 +282,33 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: !_hayCambios,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final salir = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Cambios sin guardar'),
+            content: const Text('Tienes cambios de asistencia sin guardar. ¿Deseas salir?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Salir')),
+            ],
+          ),
+        ) ?? false;
+        if (salir && mounted) Navigator.pop(context);
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Asistencia'),
         actions: [
+          if (_auth.isAdmin || _auth.isConsejero)
+            IconButton(
+              icon: const Icon(Icons.file_download_outlined),
+              tooltip: 'Exportar CSV',
+              onPressed: _exportarCSV,
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _cargarDatos,
@@ -318,6 +367,7 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
                           ),
                       ],
                     ),
+    ),
     );
   }
 
@@ -583,6 +633,7 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
                       onSelectionChanged: (val) {
                         setState(() {
                           _asistencia[miembroId]!['puntualidad'] = val.first;
+                          _hayCambios = true;
                         });
                       },
                       style: const ButtonStyle(

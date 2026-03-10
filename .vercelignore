@@ -1,0 +1,16 @@
+android
+ios
+linux
+macos
+windows
+web
+build
+test
+.dart_tool
+.gradle
+*.dart
+*.iml
+*.lock
+temp_db.db
+assets
+lib

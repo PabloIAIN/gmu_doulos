@@ -571,13 +571,22 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
         onPageChanged: (i) => setState(() => _currentIndex = i),
         itemBuilder: (context, index) {
           final file = File(widget.evidencias[index]['foto_path'] as String);
-          return Center(
-            child: InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: file.existsSync()
-                  ? Image.file(file, fit: BoxFit.contain)
-                  : const Icon(Icons.broken_image, color: Colors.grey, size: 80),
+          if (!file.existsSync()) {
+            return const Center(
+              child: Icon(Icons.broken_image, color: Colors.grey, size: 80),
+            );
+          }
+          return InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 4.0,
+            child: SizedBox.expand(
+              child: Image.file(
+                file,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(Icons.broken_image, color: Colors.grey, size: 80),
+                ),
+              ),
             ),
           );
         },

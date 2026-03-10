@@ -429,10 +429,9 @@ class _CarpetaScreenState extends State<CarpetaScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 200),
+                      constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
                       child: Image.file(
                         File(evidenciaPath),
-                        width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey, size: 60),
                       ),
@@ -449,7 +448,6 @@ class _CarpetaScreenState extends State<CarpetaScreen> {
               if (estado == 'devuelto' && prog['comentario_devolucion'] != null) ...[
                 const SizedBox(height: 8),
                 Container(
-                  width: double.infinity,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: AppTheme.warningOrange.withValues(alpha: 0.1),

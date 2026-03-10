@@ -122,6 +122,11 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
                       height: 200,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 200,
+                        color: Colors.grey[200],
+                        child: const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 60)),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -349,7 +354,11 @@ class _EvidenciasScreenState extends State<EvidenciasScreen> {
           children: [
             // Imagen real o placeholder si el archivo no existe
             file.existsSync()
-                ? Image.file(file, fit: BoxFit.cover)
+                ? Image.file(file, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.grey[300],
+                      child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                    ))
                 : Container(
                     color: Colors.grey[300],
                     child: Icon(Icons.broken_image,

@@ -166,6 +166,11 @@ class _CarpetaApproveScreenState extends State<CarpetaApproveScreen> {
                                       height: 150,
                                       width: double.infinity,
                                       fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        height: 150,
+                                        color: Colors.grey[200],
+                                        child: const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 60)),
+                                      ),
                                     ),
                                   ),
                                 ),

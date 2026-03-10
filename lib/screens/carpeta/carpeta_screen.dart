@@ -257,7 +257,17 @@ class _CarpetaScreenState extends State<CarpetaScreen> {
                   if (selectedImagePath != null && File(selectedImagePath!).existsSync()) ...[
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.file(File(selectedImagePath!), height: 200, width: double.infinity, fit: BoxFit.cover),
+                      child: Image.file(
+                      File(selectedImagePath!),
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 200,
+                        color: Colors.grey[200],
+                        child: const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 60)),
+                      ),
+                    ),
                     ),
                     const SizedBox(height: 8),
                     TextButton.icon(

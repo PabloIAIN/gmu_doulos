@@ -21,6 +21,7 @@ class AjustesScreen extends StatefulWidget {
 
 class _AjustesScreenState extends State<AjustesScreen> {
   final DatabaseService _db = DatabaseService();
+  late bool _darkMode;
   bool _notificaciones = true;
   bool _sonido = true;
   bool _recordatorios = true;
@@ -33,6 +34,7 @@ class _AjustesScreenState extends State<AjustesScreen> {
   @override
   void initState() {
     super.initState();
+    _darkMode = widget.darkMode;
     _cargarConfiguracion();
   }
 
@@ -108,12 +110,15 @@ class _AjustesScreenState extends State<AjustesScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16),
             child: SwitchListTile(
               secondary: Icon(
-                widget.darkMode ? Icons.dark_mode : Icons.light_mode,
+                _darkMode ? Icons.dark_mode : Icons.light_mode,
               ),
               title: const Text('Modo oscuro'),
-              subtitle: Text(widget.darkMode ? 'Activado' : 'Desactivado'),
-              value: widget.darkMode,
-              onChanged: widget.onDarkModeChanged,
+              subtitle: Text(_darkMode ? 'Activado' : 'Desactivado'),
+              value: _darkMode,
+              onChanged: (value) {
+                setState(() => _darkMode = value);
+                widget.onDarkModeChanged(value);
+              },
             ),
           ),
           const SizedBox(height: 16),

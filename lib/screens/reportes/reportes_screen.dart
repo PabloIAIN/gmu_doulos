@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../services/pdf_service.dart';
+import '../../services/database_service.dart';
+import '../../models/miembro.dart';
 import '../../theme/app_theme.dart';
 
 class ReportesScreen extends StatefulWidget {
@@ -15,6 +17,7 @@ class ReportesScreen extends StatefulWidget {
 
 class _ReportesScreenState extends State<ReportesScreen> {
   final PdfService _pdf = PdfService();
+  final DatabaseService _db = DatabaseService();
   bool _generando = false;
   String? _generandoTipo;
 
@@ -28,8 +31,11 @@ class _ReportesScreenState extends State<ReportesScreen> {
       File archivo;
       if (tipo == 'miembros') {
         archivo = await _pdf.generarReporteMiembros();
-      } else {
+      } else if (tipo == 'asistencia') {
         archivo = await _pdf.generarReporteAsistenciaGeneral();
+      } else {
+        // carpeta: no deberia llegar aqui
+        return;
       }
 
       if (!mounted) return;
@@ -42,6 +48,74 @@ class _ReportesScreenState extends State<ReportesScreen> {
             content: Text('Error al generar reporte: $e'),
             backgroundColor: AppTheme.errorRed,
           ),
+        );
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _generando = false;
+        _generandoTipo = null;
+      });
+    }
+  }
+
+  Future<void> _generarReporteCarpeta() async {
+    // Mostrar dialogo para seleccionar miembro
+    final miembros = await _db.getMiembros();
+    final aspirantes = miembros.where((m) => m.rol == 'Miembro').toList();
+
+    if (!mounted) return;
+
+    final seleccionado = await showDialog<Miembro>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Seleccionar aspirante'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: aspirantes.isEmpty
+              ? const Center(child: Text('No hay aspirantes registrados'))
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: aspirantes.length,
+                  itemBuilder: (ctx, i) {
+                    final m = aspirantes[i];
+                    return ListTile(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      leading: CircleAvatar(
+                        backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                        child: Text(m.iniciales, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                      title: Text(m.nombreCompleto),
+                      subtitle: Text(m.clase, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                      onTap: () => Navigator.pop(ctx, m),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+        ],
+      ),
+    );
+
+    if (seleccionado == null || !mounted) return;
+
+    setState(() {
+      _generando = true;
+      _generandoTipo = 'carpeta';
+    });
+
+    try {
+      final archivo = await _pdf.generarReporteCarpeta(seleccionado.id);
+      if (!mounted) return;
+      _mostrarResultado(archivo, 'Carpeta - ${seleccionado.nombreCompleto}');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al generar: $e'), backgroundColor: AppTheme.errorRed),
         );
       }
     }
@@ -175,6 +249,14 @@ class _ReportesScreenState extends State<ReportesScreen> {
               descripcion: 'Resumen de asistencia por fecha y por unidad con porcentajes',
               tipo: 'asistencia',
             ),
+            const SizedBox(height: 14),
+            _buildReporteCard(
+              icon: Icons.folder_special_rounded,
+              color: const Color(0xFF6A1B9A),
+              titulo: 'Carpeta de Investidura',
+              descripcion: 'Progreso individual de un aspirante con todas sus secciones y requisitos',
+              tipo: 'carpeta',
+            ),
           ],
         ),
       ),
@@ -201,7 +283,13 @@ class _ReportesScreenState extends State<ReportesScreen> {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: _generando ? null : () => _generarReporte(tipo),
+          onTap: _generando ? null : () {
+            if (tipo == 'carpeta') {
+              _generarReporteCarpeta();
+            } else {
+              _generarReporte(tipo);
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.all(18),
             child: Row(

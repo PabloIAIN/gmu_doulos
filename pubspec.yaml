@@ -61,6 +61,30 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  flutter_native_splash: ^2.4.0
+  flutter_launcher_icons: ^0.14.1
+
+# Configuracion del splash screen nativo
+flutter_native_splash:
+  color: "#1B5E20"
+  image: assets/images/guias_mayores_logo.png
+  color_dark: "#0D3311"
+  image_dark: assets/images/guias_mayores_logo.png
+  android_12:
+    color: "#1B5E20"
+    icon_background_color: "#1B5E20"
+    image: assets/images/guias_mayores_logo.png
+    color_dark: "#0D3311"
+    icon_background_color_dark: "#0D3311"
+    image_dark: assets/images/guias_mayores_logo.png
+
+# Configuracion del icono de la app
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/guias_mayores_logo.png"
+  adaptive_icon_background: "#1B5E20"
+  adaptive_icon_foreground: "assets/images/guias_mayores_logo.png"
 
 flutter:
   uses-material-design: true

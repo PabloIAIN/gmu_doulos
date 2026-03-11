@@ -135,6 +135,146 @@ class PdfService {
     return _guardarPdf(doc, 'reporte_asistencia');
   }
 
+  /// Genera PDF de carpeta de investidura de un miembro
+  Future<File> generarReporteCarpeta(String miembroId) async {
+    final miembro = await _db.getMiembro(miembroId);
+    final secciones = await _db.getCarpetaSecciones();
+    final progreso = await _db.getCarpetaProgresoMiembro(miembroId);
+    final resumen = await _db.getCarpetaResumen(miembroId);
+
+    // Pre-cargar requisitos de cada seccion
+    final requisitosPorSeccion = <String, List<Map<String, dynamic>>>{};
+    for (final seccion in secciones) {
+      final seccionId = seccion['id'] as String;
+      requisitosPorSeccion[seccionId] = await _db.getCarpetaRequisitos(seccionId);
+    }
+
+    final nombre = miembro != null ? miembro.nombreCompleto : 'Miembro';
+    final clase = miembro?.clase ?? '';
+    final total = resumen['total'] ?? 0;
+    final aprobados = resumen['aprobados'] ?? 0;
+    final enviados = resumen['enviados'] ?? 0;
+    final preaprobados = resumen['preaprobados'] ?? 0;
+    final devueltos = resumen['devueltos'] ?? 0;
+    final pendientes = total - aprobados - enviados - preaprobados - devueltos;
+    final pct = total > 0 ? (aprobados / total * 100) : 0.0;
+
+    // Organizar progreso por requisito_id
+    final progresoMap = <String, Map<String, dynamic>>{};
+    for (final p in progreso) {
+      progresoMap[p['requisito_id'] as String] = p;
+    }
+
+    final doc = pw.Document();
+
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.letter,
+        margin: const pw.EdgeInsets.all(32),
+        header: (context) => _buildHeader('Carpeta de Investidura', nombre),
+        footer: (context) => _buildFooter(context),
+        build: (context) {
+          final widgets = <pw.Widget>[];
+
+          // Info del miembro
+          widgets.add(pw.SizedBox(height: 8));
+          widgets.add(pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              color: const PdfColor.fromInt(0xFFE8F5E9),
+              borderRadius: pw.BorderRadius.circular(8),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatBox('Progreso', '${pct.toStringAsFixed(0)}%'),
+                _buildStatBox('Aprobados', '$aprobados/$total'),
+                _buildStatBox('Enviados', '$enviados'),
+                _buildStatBox('Pendientes', '$pendientes'),
+                _buildStatBox('Clase', clase),
+              ],
+            ),
+          ));
+          widgets.add(pw.SizedBox(height: 16));
+
+          // Secciones con requisitos
+          for (final seccion in secciones) {
+            final seccionId = seccion['id'] as String;
+            final seccionNombre = seccion['nombre'] as String? ?? '';
+            final seccionNumero = seccion['numero'] as int? ?? 0;
+            final requisitos = requisitosPorSeccion[seccionId] ?? [];
+
+            widgets.add(pw.Container(
+              margin: const pw.EdgeInsets.only(bottom: 4),
+              padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+              decoration: pw.BoxDecoration(
+                color: const PdfColor.fromInt(0xFF2E7D32),
+                borderRadius: pw.BorderRadius.circular(4),
+              ),
+              child: pw.Text(
+                '$seccionNumero. $seccionNombre',
+                style: pw.TextStyle(
+                  fontSize: 12,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                ),
+              ),
+            ));
+
+            // Tabla de requisitos para esta seccion
+            final reqData = <List<String>>[];
+            for (final req in requisitos) {
+              final reqId = req['id'] as String;
+              final reqNombre = req['nombre'] as String? ?? '';
+              final prog = progresoMap[reqId];
+              String estado = 'Pendiente';
+              if (prog != null) {
+                final e = prog['estado'] as String? ?? 'pendiente';
+                switch (e) {
+                  case 'aprobado':
+                    estado = 'Aprobado';
+                    break;
+                  case 'preaprobado':
+                    estado = 'Pre-aprobado';
+                    break;
+                  case 'enviado':
+                    estado = 'Enviado';
+                    break;
+                  case 'devuelto':
+                    estado = 'Devuelto';
+                    break;
+                  default:
+                    estado = prog['completado'] == 1 ? 'Completado' : 'Pendiente';
+                }
+              }
+              reqData.add([reqNombre, estado]);
+            }
+
+            if (reqData.isNotEmpty) {
+              widgets.add(pw.TableHelper.fromTextArray(
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
+                headerDecoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFFE8F5E9)),
+                cellHeight: 24,
+                cellAlignments: {
+                  0: pw.Alignment.centerLeft,
+                  1: pw.Alignment.center,
+                },
+                headers: ['Requisito', 'Estado'],
+                data: reqData,
+              ));
+            }
+            widgets.add(pw.SizedBox(height: 12));
+          }
+
+          return widgets;
+        },
+      ),
+    );
+
+    return _guardarPdf(doc, 'carpeta_${nombre.replaceAll(' ', '_').toLowerCase()}');
+  }
+
   Future<List<pw.Widget>> _buildUnidadStats() async {
     final unidadStats = await _db.getAsistenciaPorUnidad();
     if (unidadStats.isEmpty) {

@@ -49,3 +49,4 @@ nul
 
 # Claude Code local config
 .claude/
+.vercel

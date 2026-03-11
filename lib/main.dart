@@ -219,11 +219,18 @@ class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
   final AuthService _auth = AuthService();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late final List<Widget> _screens;
 
   void _openDrawer() => _scaffoldKey.currentState?.openDrawer();
 
-  // ── Tabs por rol ──
-  List<Widget> _getScreens() {
+  @override
+  void initState() {
+    super.initState();
+    _screens = _buildScreens();
+  }
+
+  // ── Tabs por rol (se crean una sola vez) ──
+  List<Widget> _buildScreens() {
     if (_auth.isAdmin) {
       return [
         HomeScreen(
@@ -333,11 +340,9 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    final screens = _getScreens();
-
     return Scaffold(
       key: _scaffoldKey,
-      body: screens[_currentIndex],
+      body: _screens[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (i) => setState(() => _currentIndex = i),
@@ -419,18 +424,20 @@ class _MainNavigationState extends State<MainNavigation> {
                           child: UserAvatar(
                             fotoUrl: user?.fotoUrl,
                             iniciales: user?.iniciales ?? 'U',
-                            radius: 30,
+                            radius: 24,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       Text(
                         nombre,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       // Rol como pill badge

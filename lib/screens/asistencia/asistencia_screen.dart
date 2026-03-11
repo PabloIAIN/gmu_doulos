@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/user_avatar.dart';
 
 class AsistenciaScreen extends StatefulWidget {
   const AsistenciaScreen({super.key});
@@ -580,16 +581,10 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
                 // Nombre
                 Row(
                   children: [
-                    CircleAvatar(
+                    UserAvatar(
+                      fotoUrl: miembro['foto_url'] as String?,
+                      iniciales: '${miembro['nombre']}'.substring(0, 1).toUpperCase(),
                       radius: 16,
-                      backgroundColor: cardBorder.withValues(alpha: 0.15),
-                      child: Text(
-                        '${miembro['nombre']}'.substring(0, 1).toUpperCase(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: cardBorder,
-                        ),
-                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(

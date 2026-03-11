@@ -3,6 +3,7 @@ import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/miembro.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/user_avatar.dart';
 
 class GestionCuentasScreen extends StatefulWidget {
   const GestionCuentasScreen({super.key});
@@ -184,18 +185,10 @@ class _GestionCuentasScreenState extends State<GestionCuentasScreen> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: tieneCuenta
-                            ? AppTheme.successGreen.withValues(alpha:0.1)
-                            : Colors.grey[200],
-                        child: Icon(
-                          tieneCuenta
-                              ? Icons.person
-                              : Icons.person_outline,
-                          color: tieneCuenta
-                              ? AppTheme.successGreen
-                              : Colors.grey,
-                        ),
+                      leading: UserAvatar(
+                        fotoUrl: m.fotoUrl,
+                        iniciales: m.iniciales,
+                        radius: 20,
                       ),
                       title: Text(m.nombreCompleto,
                           style:

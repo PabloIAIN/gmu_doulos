@@ -7,6 +7,7 @@ import '../../services/pdf_service.dart';
 import '../../services/database_service.dart';
 import '../../models/miembro.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/user_avatar.dart';
 
 class ReportesScreen extends StatefulWidget {
   const ReportesScreen({super.key});
@@ -84,9 +85,10 @@ class _ReportesScreenState extends State<ReportesScreen> {
                     final m = aspirantes[i];
                     return ListTile(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      leading: CircleAvatar(
-                        backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                        child: Text(m.iniciales, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      leading: UserAvatar(
+                        fotoUrl: m.fotoUrl,
+                        iniciales: m.iniciales,
+                        radius: 20,
                       ),
                       title: Text(m.nombreCompleto),
                       subtitle: Text(m.clase, style: TextStyle(fontSize: 12, color: Colors.grey[500])),

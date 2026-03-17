@@ -1,5 +1,5 @@
-const { initDatabase } = require('../lib/db');
-const { verificarApiKey, handleOptions } = require('../lib/auth');
+const { initDatabase } = require('./_db');
+const { verificarApiKey, handleOptions } = require('./_auth');
 
 module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;

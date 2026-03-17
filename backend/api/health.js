@@ -1,38 +1,48 @@
-const { sql } = require('@vercel/postgres');
-const { handleOptions } = require('../lib/auth');
-
 module.exports = async (req, res) => {
-  if (handleOptions(req, res)) return;
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Diagnostico de env vars
+  const envVars = {
+    POSTGRES_URL: !!process.env.POSTGRES_URL,
+    POSTGRES_DATABASE_URL: !!process.env.POSTGRES_DATABASE_URL,
+    DATABASE_URL: !!process.env.DATABASE_URL,
+    STORAGE_URL: !!process.env.STORAGE_URL,
+    API_KEY: !!process.env.API_KEY,
+  };
 
   try {
-    // Probar conexión a la base de datos
-    const result = await sql`SELECT NOW() as server_time`;
+    const { sql } = require('./_db');
 
+    if (!sql) {
+      return res.status(200).json({
+        status: 'error',
+        message: 'No database connection string found',
+        env_vars: envVars,
+        version: '2.0.0',
+      });
+    }
+
+    const result = await sql`SELECT NOW() as server_time`;
     return res.status(200).json({
       status: 'ok',
       database: 'connected',
-      server_time: result.rows[0].server_time,
+      server_time: result[0].server_time,
+      env_vars: envVars,
       endpoints: [
-        'GET/POST       /api/miembros',
-        'GET/POST       /api/eventos',
-        'GET/POST       /api/asistencia',
-        'GET/POST       /api/unidades',
-        'POST           /api/auth',
-        'GET/POST       /api/sync',
-        'POST           /api/setup',
-        'POST           /api/send-notification',
+        '/api/miembros', '/api/eventos', '/api/asistencia',
+        '/api/unidades', '/api/auth', '/api/sync', '/api/setup',
       ],
       version: '2.0.0',
     });
   } catch (error) {
     return res.status(200).json({
-      status: 'ok',
-      database: 'not configured',
-      message: 'Configura POSTGRES_URL en Vercel → Storage → Postgres',
-      endpoints: [
-        '/api/miembros', '/api/eventos', '/api/asistencia',
-        '/api/unidades', '/api/auth', '/api/sync', '/api/setup',
-      ],
+      status: 'error',
+      message: error.message,
+      stack: error.stack ? error.stack.split('\n').slice(0, 5) : null,
+      env_vars: envVars,
       version: '2.0.0',
     });
   }

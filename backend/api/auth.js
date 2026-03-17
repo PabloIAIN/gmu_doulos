@@ -1,5 +1,5 @@
-const { sql } = require('@vercel/postgres');
-const { handleOptions } = require('../lib/auth');
+const { sql } = require('./_db');
+const { handleOptions } = require('./_auth');
 const crypto = require('crypto');
 
 const SALT = 'gmu_doulos_salt_2025_';
@@ -12,45 +12,20 @@ module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;
 
   try {
-    switch (req.method) {
-      // ── POST: Login ──
-      case 'POST': {
-        const { usuario, password } = req.body;
-
-        if (!usuario || !password) {
-          return res.status(400).json({ error: 'usuario y password son requeridos' });
-        }
-
-        const passwordHash = hashPassword(password);
-        const result = await sql`
-          SELECT id, nombre, apellido, rol, clase, email, telefono, foto_url
-          FROM miembros
-          WHERE usuario = ${usuario} AND password_hash = ${passwordHash} AND activo = 1
-        `;
-
-        if (result.rows.length === 0) {
-          return res.status(401).json({ error: 'Credenciales inválidas' });
-        }
-
-        const user = result.rows[0];
-        return res.status(200).json({
-          ok: true,
-          data: user,
-        });
-      }
-
-      // ── GET: Health check ──
-      case 'GET': {
-        return res.status(200).json({
-          status: 'ok',
-          endpoint: 'auth',
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      default:
-        return res.status(405).json({ error: 'Método no permitido' });
+    if (req.method === 'POST') {
+      const { usuario, password } = req.body;
+      if (!usuario || !password) return res.status(400).json({ error: 'usuario y password son requeridos' });
+      const passwordHash = hashPassword(password);
+      const rows = await sql`SELECT id, nombre, apellido, rol, clase, email, telefono, foto_url FROM miembros WHERE usuario=${usuario} AND password_hash=${passwordHash} AND activo=1`;
+      if (rows.length === 0) return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(200).json({ ok: true, data: rows[0] });
     }
+
+    if (req.method === 'GET') {
+      return res.status(200).json({ status: 'ok', endpoint: 'auth' });
+    }
+
+    return res.status(405).json({ error: 'Método no permitido' });
   } catch (error) {
     console.error('Error en /api/auth:', error);
     return res.status(500).json({ error: error.message });

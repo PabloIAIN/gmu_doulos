@@ -11,6 +11,8 @@ import '../asistencia/asistencia_screen.dart';
 import '../carpeta/carpeta_manage_screen.dart';
 import '../carpeta/carpeta_approve_screen.dart';
 import 'gestion_cuentas_screen.dart';
+import 'importar_miembros_screen.dart';
+import 'sync_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   final VoidCallback? onOpenDrawer;
@@ -113,7 +115,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   _buildActionCard(icon: Icons.folder_copy, label: 'Gestionar\nCarpeta', color: Colors.teal, onTap: () => _navTo(const CarpetaManageScreen())),
                   _buildActionCard(icon: Icons.approval, label: 'Aprobar\nCarpetas', color: Colors.amber, onTap: () => _navTo(const CarpetaApproveScreen())),
                   _buildActionCard(icon: Icons.manage_accounts, label: 'Cuentas', color: Colors.indigo, onTap: () => _navTo(const GestionCuentasScreen())),
+                  _buildActionCard(icon: Icons.upload_file, label: 'Importar\nMiembros', color: Colors.cyan, onTap: () => _navTo(const ImportarMiembrosScreen())),
                   _buildActionCard(icon: Icons.campaign, label: 'Enviar\nAviso', color: Colors.red, onTap: _mostrarDialogoAviso),
+                  _buildActionCard(icon: Icons.cloud_sync, label: 'Sincronizar\nBackend', color: Colors.deepPurple, onTap: () => _navTo(const SyncScreen())),
                 ],
               ),
             ],

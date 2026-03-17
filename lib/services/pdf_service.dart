@@ -145,8 +145,10 @@ class PdfService {
     // Pre-cargar requisitos de cada seccion
     final requisitosPorSeccion = <String, List<Map<String, dynamic>>>{};
     for (final seccion in secciones) {
-      final seccionId = seccion['id'] as String;
-      requisitosPorSeccion[seccionId] = await _db.getCarpetaRequisitos(seccionId);
+      final seccionId = seccion['id'] as String? ?? '';
+      if (seccionId.isNotEmpty) {
+        requisitosPorSeccion[seccionId] = await _db.getCarpetaRequisitos(seccionId);
+      }
     }
 
     final nombre = miembro != null ? miembro.nombreCompleto : 'Miembro';
@@ -159,10 +161,11 @@ class PdfService {
     final pendientes = total - aprobados - enviados - preaprobados - devueltos;
     final pct = total > 0 ? (aprobados / total * 100) : 0.0;
 
-    // Organizar progreso por requisito_id
+    // Organizar progreso por requisito id (r.id de la query)
     final progresoMap = <String, Map<String, dynamic>>{};
     for (final p in progreso) {
-      progresoMap[p['requisito_id'] as String] = p;
+      final id = p['id'] as String?;
+      if (id != null) progresoMap[id] = p;
     }
 
     final doc = pw.Document();
@@ -199,7 +202,7 @@ class PdfService {
 
           // Secciones con requisitos
           for (final seccion in secciones) {
-            final seccionId = seccion['id'] as String;
+            final seccionId = seccion['id'] as String? ?? '';
             final seccionNombre = seccion['nombre'] as String? ?? '';
             final seccionNumero = seccion['numero'] as int? ?? 0;
             final requisitos = requisitosPorSeccion[seccionId] ?? [];
@@ -224,7 +227,7 @@ class PdfService {
             // Tabla de requisitos para esta seccion
             final reqData = <List<String>>[];
             for (final req in requisitos) {
-              final reqId = req['id'] as String;
+              final reqId = req['id'] as String? ?? '';
               final reqNombre = req['nombre'] as String? ?? '';
               final prog = progresoMap[reqId];
               String estado = 'Pendiente';

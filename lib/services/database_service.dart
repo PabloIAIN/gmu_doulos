@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/miembro.dart';
 import '../models/evento.dart';
+import 'sync_manager.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -624,6 +625,7 @@ class DatabaseService {
       registroId: miembro.id,
       descripcion: 'Miembro creado: ${miembro.nombre} ${miembro.apellido}',
     );
+    SyncManager().syncEnBackground();
     return result;
   }
 
@@ -641,6 +643,7 @@ class DatabaseService {
       registroId: miembro.id,
       descripcion: 'Miembro editado: ${miembro.nombre} ${miembro.apellido}',
     );
+    SyncManager().syncEnBackground();
     return result;
   }
 
@@ -657,6 +660,7 @@ class DatabaseService {
       registroId: id,
       descripcion: 'Miembro eliminado',
     );
+    SyncManager().syncEnBackground();
     return result;
   }
 
@@ -702,6 +706,7 @@ class DatabaseService {
       accion: 'crear', tabla: 'eventos', registroId: evento.id,
       descripcion: 'Evento creado: ${evento.titulo}',
     );
+    SyncManager().syncEnBackground();
     return result;
   }
 
@@ -713,6 +718,7 @@ class DatabaseService {
       accion: 'editar', tabla: 'eventos', registroId: evento.id,
       descripcion: 'Evento editado: ${evento.titulo}',
     );
+    SyncManager().syncEnBackground();
     return result;
   }
 
@@ -723,6 +729,7 @@ class DatabaseService {
       accion: 'eliminar', tabla: 'eventos', registroId: id,
       descripcion: 'Evento eliminado',
     );
+    SyncManager().syncEnBackground();
     return result;
   }
 
@@ -790,6 +797,7 @@ class DatabaseService {
       descripcion: 'Asistencia registrada: $fecha (${registros.length} miembros)',
       usuarioId: registradoPor,
     );
+    SyncManager().syncEnBackground();
   }
 
   Future<double> getPorcentajeAsistencia() async {
@@ -1099,20 +1107,26 @@ class DatabaseService {
 
   Future<int> insertUnidad(Map<String, dynamic> unidad) async {
     final db = await database;
-    return await db.insert('unidades', unidad,
+    final result = await db.insert('unidades', unidad,
         conflictAlgorithm: ConflictAlgorithm.replace);
+    SyncManager().syncEnBackground();
+    return result;
   }
 
   Future<int> updateUnidad(Map<String, dynamic> unidad) async {
     final db = await database;
-    return await db.update('unidades', unidad,
+    final result = await db.update('unidades', unidad,
         where: 'id = ?', whereArgs: [unidad['id']]);
+    SyncManager().syncEnBackground();
+    return result;
   }
 
   Future<int> deleteUnidad(String id) async {
     final db = await database;
     await db.delete('unidad_miembros', where: 'unidad_id = ?', whereArgs: [id]);
-    return await db.delete('unidades', where: 'id = ?', whereArgs: [id]);
+    final result = await db.delete('unidades', where: 'id = ?', whereArgs: [id]);
+    SyncManager().syncEnBackground();
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> getMiembrosDeUnidad(String unidadId) async {
@@ -1140,6 +1154,7 @@ class DatabaseService {
       'rol_en_unidad': rolEnUnidad,
       'fecha_asignacion': DateTime.now().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+    SyncManager().syncEnBackground();
   }
 
   Future<void> desasignarMiembroDeUnidad({
@@ -1149,6 +1164,7 @@ class DatabaseService {
     final db = await database;
     final id = '${unidadId}_$miembroId';
     await db.delete('unidad_miembros', where: 'id = ?', whereArgs: [id]);
+    SyncManager().syncEnBackground();
   }
 
   Future<Map<String, dynamic>?> getUnidadDeConsejero(String consejeroId) async {

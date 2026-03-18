@@ -35,6 +35,7 @@ import 'services/notification_service.dart'
     show NotificationService, firebaseMessagingBackgroundHandler;
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
+import 'services/sync_manager.dart';
 
 // Tema
 import 'theme/app_theme.dart';
@@ -48,6 +49,7 @@ void main() async {
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await NotificationService().init();
+  SyncManager().init(); // Descarga datos del servidor en background
   runApp(const GMUDoulosApp());
 }
 

@@ -11,7 +11,7 @@ class ApiService {
   // ── Configuración ──
   // TODO: Cambiar a tu URL real de Vercel
   static const String _baseUrl = 'https://gmu-doulos.vercel.app/api';
-  static const String _apiKey = 'gmu_doulos_api_key_2025';
+  static const String _apiKey = 'gmu-doulos-2025-secret';
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',

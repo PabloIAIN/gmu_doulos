@@ -76,11 +76,11 @@ class _GestionCuentasScreenState extends State<GestionCuentasScreen> {
               final usuario = usuarioCtrl.text.trim();
               final password = passwordCtrl.text;
 
-              if (usuario.isEmpty || password.length < 4) {
+              if (usuario.isEmpty || password.length < 6) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   const SnackBar(
                       content: Text(
-                          'Usuario requerido y contrasena min 4 caracteres')),
+                          'Usuario requerido y contrasena min 6 caracteres')),
                 );
                 return;
               }
@@ -138,10 +138,10 @@ class _GestionCuentasScreenState extends State<GestionCuentasScreen> {
           ElevatedButton(
             onPressed: () async {
               final password = passwordCtrl.text;
-              if (password.length < 4) {
+              if (password.length < 6) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   const SnackBar(
-                      content: Text('Contrasena min 4 caracteres')),
+                      content: Text('Contrasena min 6 caracteres')),
                 );
                 return;
               }

@@ -285,8 +285,8 @@ class _FirstRunSetupScreenState extends State<FirstRunSetupScreen> {
                                 if (v == null || v.isEmpty) {
                                   return 'Ingresa una contrasena';
                                 }
-                                if (v.length < 4) {
-                                  return 'Minimo 4 caracteres';
+                                if (v.length < 6) {
+                                  return 'Minimo 6 caracteres';
                                 }
                                 return null;
                               },

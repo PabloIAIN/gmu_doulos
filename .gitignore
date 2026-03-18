@@ -50,3 +50,10 @@ nul
 # Claude Code local config
 .claude/
 .vercel
+.env*.local
+
+# Signing keys (NEVER commit)
+android/key.properties
+android/app/*.jks
+android/app/*.keystore
+temp_db.db

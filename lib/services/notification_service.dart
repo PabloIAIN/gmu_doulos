@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
@@ -82,7 +83,7 @@ class NotificationService {
 
     // Obtener token FCM
     _fcmToken = await _fcm.getToken();
-    print('=== FCM TOKEN: $_fcmToken ===');
+    // Token disponible en _fcmToken para uso interno
 
     // Escuchar cambios de token
     _fcm.onTokenRefresh.listen((token) {
@@ -345,7 +346,7 @@ class NotificationService {
           'tipo': tipo,
         }),
       );
-      print('=== PUSH RESPONSE: ${response.statusCode} ${response.body} ===');
+      debugPrint('Push response: ${response.statusCode}');
       if (response.statusCode == 200) return true;
       // Si el backend fallo, mostrar local como fallback
       await mostrarNotificacion(
@@ -356,7 +357,7 @@ class NotificationService {
       );
       return false;
     } catch (e) {
-      print('=== PUSH ERROR: $e ===');
+      debugPrint('Push error: $e');
       // Si falla la conexion, mostrar local como fallback
       await mostrarNotificacion(
         id: 'local_${DateTime.now().millisecondsSinceEpoch}',

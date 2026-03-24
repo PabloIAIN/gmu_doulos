@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../services/database_service.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -46,7 +47,7 @@ class _BackupScreenState extends State<BackupScreen> {
       // Compartir el archivo
       await Share.shareXFiles(
         [XFile(file.path)],
-        subject: 'GMU Doulos - Backup $fecha',
+        subject: '${AppConfig.appName} - Backup $fecha',
       );
 
       if (mounted) {

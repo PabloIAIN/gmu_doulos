@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -15,16 +16,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final _pages = const [
-    _OnboardingPage(
+  final _pages = [
+    const _OnboardingPage(
       icon: Icons.shield,
-      title: 'Bienvenido a GMU Doulos',
+      title: 'Bienvenido a ${AppConfig.appName}',
       description:
-          'La app para gestionar tu Club de Guías Mayores.\n'
+          'La app para gestionar tu ${AppConfig.clubName}.\n'
           'Organiza miembros, unidades, asistencia y mas.',
       color: AppTheme.primaryGreen,
     ),
-    _OnboardingPage(
+    const _OnboardingPage(
       icon: Icons.people,
       title: 'Gestiona tu Club',
       description:
@@ -32,7 +33,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'control de asistencia de sabados y domingos.',
       color: AppTheme.infoBlue,
     ),
-    _OnboardingPage(
+    const _OnboardingPage(
       icon: Icons.folder_special,
       title: 'Carpeta de Investidura',
       description:
@@ -40,7 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'requisitos. Los consejeros revisan y el director aprueba.',
       color: Colors.purple,
     ),
-    _OnboardingPage(
+    const _OnboardingPage(
       icon: Icons.bar_chart,
       title: 'Reportes y Estadisticas',
       description:

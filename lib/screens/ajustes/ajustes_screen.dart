@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/database_service.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 import 'audit_log_screen.dart';
 import 'backup_screen.dart';
 
@@ -26,9 +28,9 @@ class _AjustesScreenState extends State<AjustesScreen> {
   bool _sonido = true;
   bool _recordatorios = true;
 
-  String _clubNombre = 'GMU Doulos';
-  String _clubUbicacion = 'Montemorelos, Nuevo León';
-  String _clubIglesia = 'Iglesia Adventista Central';
+  String _clubNombre = AppConfig.appName;
+  String _clubUbicacion = AppConfig.location;
+  String _clubIglesia = AppConfig.church;
   String? _ultimoRespaldo;
 
   @override
@@ -42,12 +44,14 @@ class _AjustesScreenState extends State<AjustesScreen> {
     try {
       final config = await _db.getAllConfig();
       setState(() {
-        _clubNombre = config['club_nombre'] ?? 'GMU Doulos';
-        _clubUbicacion = config['club_ubicacion'] ?? 'Montemorelos, Nuevo León';
-        _clubIglesia = config['club_iglesia'] ?? 'Iglesia Adventista Central';
+        _clubNombre = config['club_nombre'] ?? AppConfig.appName;
+        _clubUbicacion = config['club_ubicacion'] ?? AppConfig.location;
+        _clubIglesia = config['club_iglesia'] ?? AppConfig.church;
         _ultimoRespaldo = config['ultimo_respaldo'];
       });
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error loading config: $e');
+    }
   }
 
   @override
@@ -79,7 +83,7 @@ class _AjustesScreenState extends State<AjustesScreen> {
                     ),
                   ),
                   title: Text(_clubNombre),
-                  subtitle: const Text('Club de Guías Mayores'),
+                  subtitle: const Text(AppConfig.clubName),
                   trailing: const Icon(Icons.edit),
                   onTap: () => _editarPerfilDialog('club_nombre', 'Nombre del Club', _clubNombre),
                 ),
@@ -265,7 +269,7 @@ class _AjustesScreenState extends State<AjustesScreen> {
                   ),
                 ),
                 Text(
-                  '"Siervos de Cristo"',
+                  AppConfig.tagline,
                   style: GoogleFonts.poppins(
                     color: Colors.grey[500],
                     fontStyle: FontStyle.italic,

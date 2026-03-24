@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'database_service.dart';
+import '../config/app_config.dart';
 
 /// Handler para mensajes en background (debe ser top-level function)
 @pragma('vm:entry-point')
@@ -144,9 +145,9 @@ class NotificationService {
     await init();
 
     const androidDetails = AndroidNotificationDetails(
-      'gmu_doulos_channel',
-      'GMU Doulos',
-      channelDescription: 'Notificaciones del Club de Guías Mayores',
+      AppConfig.notificationChannelId,
+      AppConfig.appName,
+      channelDescription: AppConfig.notificationChannelDescription,
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
@@ -346,7 +347,7 @@ class NotificationService {
           'tipo': tipo,
         }),
       );
-      debugPrint('Push response: ${response.statusCode}');
+      if (kDebugMode) debugPrint('Push response: ${response.statusCode}');
       if (response.statusCode == 200) return true;
       // Si el backend fallo, mostrar local como fallback
       await mostrarNotificacion(
@@ -357,7 +358,7 @@ class NotificationService {
       );
       return false;
     } catch (e) {
-      debugPrint('Push error: $e');
+      if (kDebugMode) debugPrint('Push error: $e');
       // Si falla la conexion, mostrar local como fallback
       await mostrarNotificacion(
         id: 'local_${DateTime.now().millisecondsSinceEpoch}',

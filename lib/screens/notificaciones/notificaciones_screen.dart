@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../services/database_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 
 class NotificacionesScreen extends StatefulWidget {
   const NotificacionesScreen({super.key});
@@ -787,7 +788,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
       id: 'test_${DateTime.now().millisecondsSinceEpoch}',
       titulo: 'Notificación de prueba',
       mensaje:
-          'Esta es una notificación de prueba del Club GMU Doulos. ¡Todo funciona correctamente!',
+          'Esta es una notificación de prueba del Club ${AppConfig.appName}. ¡Todo funciona correctamente!',
       tipo: 'info',
     );
     await _cargarNotificaciones();

@@ -7,6 +7,7 @@ import '../../models/evento.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 
 class CalendarioScreen extends StatefulWidget {
   final VoidCallback? onOpenDrawer;
@@ -76,7 +77,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
       final buffer = StringBuffer();
       buffer.writeln('BEGIN:VCALENDAR');
       buffer.writeln('VERSION:2.0');
-      buffer.writeln('PRODID:-//GMU Doulos//Calendario//ES');
+      buffer.writeln('PRODID:-//${AppConfig.appName}//Calendario//ES');
       for (final evento in _eventos) {
         final fecha = evento.fecha;
         final fechaStr = '${fecha.year}${fecha.month.toString().padLeft(2, '0')}${fecha.day.toString().padLeft(2, '0')}';
@@ -96,7 +97,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/gmu_doulos_eventos.ics');
       await file.writeAsString(buffer.toString());
-      await Share.shareXFiles([XFile(file.path)], text: 'Eventos GMU Doulos');
+      await Share.shareXFiles([XFile(file.path)], text: 'Eventos ${AppConfig.appName}');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

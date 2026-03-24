@@ -40,6 +40,9 @@ import 'services/sync_manager.dart';
 // Tema
 import 'theme/app_theme.dart';
 
+// Config
+import 'config/app_config.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
@@ -85,7 +88,7 @@ class _GMUDoulosAppState extends State<GMUDoulosApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GMU Doulos',
+      title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -571,7 +574,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 Icon(Icons.shield_rounded, size: 16, color: Colors.grey[400]),
                 const SizedBox(width: 6),
                 Text(
-                  'GMU Doulos v1.1.0',
+                  AppConfig.appNameWithVersion,
                   style: TextStyle(
                     color: Colors.grey[500],
                     fontSize: 12,
@@ -738,7 +741,7 @@ class _SplashScreenState extends State<_SplashScreen>
                   child: Column(
                     children: [
                       Text(
-                        'GMU Doulos',
+                        AppConfig.appName,
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
@@ -754,7 +757,7 @@ class _SplashScreenState extends State<_SplashScreen>
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        '"Siervos de Cristo"',
+                        AppConfig.tagline,
                         style: TextStyle(
                           fontSize: 14,
                           fontStyle: FontStyle.italic,

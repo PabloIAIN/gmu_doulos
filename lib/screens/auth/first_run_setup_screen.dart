@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 
 class FirstRunSetupScreen extends StatefulWidget {
   final VoidCallback onSetupComplete;
@@ -98,7 +99,7 @@ class _FirstRunSetupScreenState extends State<FirstRunSetupScreen> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'GMU Doulos',
+                    AppConfig.appName,
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,

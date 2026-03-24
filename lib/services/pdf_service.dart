@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'database_service.dart';
+import '../config/app_config.dart';
 
 class PdfService {
   final DatabaseService _db = DatabaseService();
@@ -16,7 +17,7 @@ class PdfService {
       pw.MultiPage(
         pageFormat: PdfPageFormat.letter,
         margin: const pw.EdgeInsets.all(32),
-        header: (context) => _buildHeader('Reporte de Miembros', 'GMU Doulos - Club de Guias Mayores'),
+        header: (context) => _buildHeader('Reporte de Miembros', '${AppConfig.appName} - ${AppConfig.clubName}'),
         footer: (context) => _buildFooter(context),
         build: (context) => [
           pw.SizedBox(height: 12),
@@ -65,7 +66,7 @@ class PdfService {
       pw.MultiPage(
         pageFormat: PdfPageFormat.letter,
         margin: const pw.EdgeInsets.all(32),
-        header: (context) => _buildHeader('Reporte de Asistencia', 'GMU Doulos - Club de Guias Mayores'),
+        header: (context) => _buildHeader('Reporte de Asistencia', '${AppConfig.appName} - ${AppConfig.clubName}'),
         footer: (context) => _buildFooter(context),
         build: (context) => [
           pw.SizedBox(height: 12),
@@ -343,7 +344,7 @@ class PdfService {
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
         pw.Text(
-          'GMU Doulos - "Siervos de Cristo"',
+          '${AppConfig.appName} - ${AppConfig.tagline}',
           style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
         ),
         pw.Text(

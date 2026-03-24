@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import '../models/miembro.dart';
 import '../models/evento.dart';
 import 'sync_manager.dart';
+import '../config/app_config.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -20,7 +21,7 @@ class DatabaseService {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'gmu_doulos.db');
+    String path = join(await getDatabasesPath(), AppConfig.databaseName);
     return await openDatabase(
       path,
       version: 9,
@@ -1497,7 +1498,7 @@ class DatabaseService {
 
     final data = {
       'exportado_en': DateTime.now().toIso8601String(),
-      'version': 'GMU Doulos v1.0.0',
+      'version': AppConfig.appNameWithVersion,
       'miembros': miembrosSafe,
       'eventos': await db.query('eventos'),
       'asistencia': await db.query('asistencia'),

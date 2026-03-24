@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
+import '../carpeta/carpeta_screen.dart';
 
 class ConsejeroUnidadScreen extends StatefulWidget {
   final VoidCallback? onOpenDrawer;
@@ -130,7 +131,14 @@ class _ConsejeroUnidadScreenState extends State<ConsejeroUnidadScreen> {
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(12),
                                 onTap: () {
-                                  // TODO: Navegar a carpeta del aspirante
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => CarpetaScreen(
+                                        miembroId: a['id'] as String,
+                                        miembroNombre: '$nombre $apellido',
+                                      ),
+                                    ),
+                                  );
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),

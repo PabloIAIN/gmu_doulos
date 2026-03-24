@@ -3,6 +3,7 @@ import '../models/evento.dart';
 import '../services/database_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../config/app_config.dart';
 import '../widgets/gradient_card.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/section_header.dart';
@@ -170,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(Icons.shield, size: 22, color: AppTheme.primaryGreen),
             SizedBox(width: 8),
-            Text('GMU Doulos'),
+            Text(AppConfig.appName),
           ],
         ),
         actions: [
@@ -498,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Club GMU Doulos',
+                  'Club ${AppConfig.appName}',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
                 ),
                 const SizedBox(height: 10),

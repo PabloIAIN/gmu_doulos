@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 import '../../widgets/user_avatar.dart';
 
 class AsistenciaScreen extends StatefulWidget {
@@ -264,7 +265,7 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
       await file.writeAsString(csv);
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'Asistencia GMU Doulos',
+        text: 'Asistencia ${AppConfig.appName}',
       );
     } catch (e) {
       if (mounted) {

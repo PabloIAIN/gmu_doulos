@@ -26,7 +26,7 @@ class SyncManager {
     try {
       await descargarDatos();
     } catch (e) {
-      debugPrint('SyncManager.init: sin conexión, usando datos locales');
+      if (kDebugMode) debugPrint('SyncManager.init: sin conexión, usando datos locales');
     }
   }
 
@@ -62,10 +62,10 @@ class SyncManager {
       );
 
       _syncController.add(SyncStatus.success);
-      debugPrint('SyncManager: datos subidos correctamente');
+      if (kDebugMode) debugPrint('SyncManager: datos subidos correctamente');
     } catch (e) {
       _syncController.add(SyncStatus.error);
-      debugPrint('SyncManager: error al subir - $e');
+      if (kDebugMode) debugPrint('SyncManager: error al subir - $e');
     } finally {
       _syncing = false;
     }
@@ -128,10 +128,10 @@ class SyncManager {
       }
 
       _syncController.add(SyncStatus.success);
-      debugPrint('SyncManager: datos descargados correctamente');
+      if (kDebugMode) debugPrint('SyncManager: datos descargados correctamente');
     } catch (e) {
       _syncController.add(SyncStatus.error);
-      debugPrint('SyncManager: error al descargar - $e');
+      if (kDebugMode) debugPrint('SyncManager: error al descargar - $e');
     } finally {
       _syncing = false;
     }

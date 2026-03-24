@@ -7,6 +7,7 @@ import '../../services/pdf_service.dart';
 import '../../services/database_service.dart';
 import '../../models/miembro.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 import '../../widgets/user_avatar.dart';
 
 class ReportesScreen extends StatefulWidget {
@@ -196,7 +197,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                         Navigator.pop(ctx);
                         Share.shareXFiles(
                           [XFile(archivo.path)],
-                          text: 'Reporte de $nombre - GMU Doulos',
+                          text: 'Reporte de $nombre - ${AppConfig.appName}',
                         );
                       },
                       icon: const Icon(Icons.share_rounded),

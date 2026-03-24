@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../config/app_config.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onLoginSuccess;
@@ -218,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          'GMU Doulos',
+                          AppConfig.appName,
                           style: GoogleFonts.poppins(
                             fontSize: 34,
                             fontWeight: FontWeight.w700,
@@ -393,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         const SizedBox(height: 28),
                         Text(
-                          '"Siervos de Cristo"',
+                          AppConfig.tagline,
                           style: GoogleFonts.poppins(
                             color: Colors.grey[500],
                             fontSize: 13,

@@ -328,9 +328,10 @@ class ApiService {
     required String password,
   }) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/onboarding'),
+      Uri.parse('$_baseUrl/clubes'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'onboarding',
         'codigo_acceso': codigoAcceso,
         'ministerio': ministerio,
         'nombre': nombre,
@@ -358,9 +359,10 @@ class ApiService {
     String? claseMinisterio,
   }) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/unirse'),
+      Uri.parse('$_baseUrl/clubes'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'unirse',
         'club_id': clubId,
         'ministerio': ministerio,
         'nombre': nombre,
@@ -380,10 +382,10 @@ class ApiService {
 
   /// Obtener solicitudes pendientes de aprobación
   Future<List<Map<String, dynamic>>> getPendientes(String clubId, {String? ministerio}) async {
-    final params = <String, String>{'club_id': clubId};
+    final params = <String, String>{'pendientes': '1', 'club_id': clubId};
     if (ministerio != null) params['ministerio'] = ministerio;
 
-    final uri = Uri.parse('$_baseUrl/aprobaciones').replace(queryParameters: params);
+    final uri = Uri.parse('$_baseUrl/clubes').replace(queryParameters: params);
     final response = await http.get(uri, headers: _headers);
     _checkResponse(response);
 
@@ -399,12 +401,12 @@ class ApiService {
     String? rol,
   }) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/aprobaciones'),
+      Uri.parse('$_baseUrl/clubes'),
       headers: _headers,
       body: jsonEncode({
+        'action': accion,
         'club_id': clubId,
         'miembro_id': miembroId,
-        'accion': accion,
         if (rol != null) 'rol': rol,
       }),
     );

@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.gmudoulos.app"
+    namespace = "com.example.gmu_doulos"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -39,8 +39,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.gmudoulos.app"
-        minSdk = 21
+        applicationId = "com.example.gmu_doulos"
+        minSdk = flutter.minSdkVersion
         targetSdk = 34
         versionCode = 2
         versionName = "2.0.0"

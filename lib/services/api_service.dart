@@ -236,6 +236,7 @@ class ApiService {
     List<Map<String, dynamic>>? unidades,
     List<Map<String, dynamic>>? unidadMiembros,
     List<Map<String, dynamic>>? asistencia,
+    String? clubId,
   }) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/sync'),
@@ -246,6 +247,7 @@ class ApiService {
         if (unidades != null) 'unidades': unidades,
         if (unidadMiembros != null) 'unidad_miembros': unidadMiembros,
         if (asistencia != null) 'asistencia': asistencia,
+        if (clubId != null) 'club_id': clubId,
       }),
     );
     _checkResponse(response);
@@ -254,11 +256,11 @@ class ApiService {
   }
 
   /// Descargar todos los datos del backend
-  Future<Map<String, dynamic>> syncDescargar() async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/sync'),
-      headers: _headers,
-    );
+  Future<Map<String, dynamic>> syncDescargar({String? clubId}) async {
+    final params = <String, String>{};
+    if (clubId != null) params['club_id'] = clubId;
+    final uri = Uri.parse('$_baseUrl/sync').replace(queryParameters: params.isNotEmpty ? params : null);
+    final response = await http.get(uri, headers: _headers);
     _checkResponse(response);
 
     final body = jsonDecode(response.body);
@@ -282,6 +284,131 @@ class ApiService {
   Future<Map<String, dynamic>> healthCheck() async {
     final response = await http.get(Uri.parse('$_baseUrl/health'));
     return Map<String, dynamic>.from(jsonDecode(response.body));
+  }
+
+  // ══════════════════════════════════════════
+  //  CLUBES
+  // ══════════════════════════════════════════
+
+  /// Verificar código de acceso (no requiere API key)
+  Future<Map<String, dynamic>?> verificarCodigo(String codigo) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/clubes?codigo=$codigo'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode == 404) return null;
+    _checkResponse(response);
+    final body = jsonDecode(response.body);
+    return Map<String, dynamic>.from(body['data']);
+  }
+
+  /// Obtener club por ID
+  Future<Map<String, dynamic>?> getClub(String clubId) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/clubes?id=$clubId'),
+      headers: _headers,
+    );
+    if (response.statusCode == 404) return null;
+    _checkResponse(response);
+    final body = jsonDecode(response.body);
+    return Map<String, dynamic>.from(body['data']);
+  }
+
+  // ══════════════════════════════════════════
+  //  ONBOARDING / UNIRSE
+  // ══════════════════════════════════════════
+
+  /// Registro de Director con código de acceso
+  Future<Map<String, dynamic>> onboarding({
+    required String codigoAcceso,
+    required String ministerio,
+    required String nombre,
+    required String apellido,
+    required String usuario,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/onboarding'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'codigo_acceso': codigoAcceso,
+        'ministerio': ministerio,
+        'nombre': nombre,
+        'apellido': apellido,
+        'usuario': usuario,
+        'password': password,
+      }),
+    );
+    _checkResponse(response);
+    return Map<String, dynamic>.from(jsonDecode(response.body));
+  }
+
+  /// Solicitud de unión de miembro/consejero
+  Future<Map<String, dynamic>> unirse({
+    required String clubId,
+    required String ministerio,
+    required String nombre,
+    required String apellido,
+    required String usuario,
+    required String password,
+    required String rolSolicitado,
+    String? fechaNacimiento,
+    String? telefono,
+    String? email,
+    String? claseMinisterio,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/unirse'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'club_id': clubId,
+        'ministerio': ministerio,
+        'nombre': nombre,
+        'apellido': apellido,
+        'usuario': usuario,
+        'password': password,
+        'rol_solicitado': rolSolicitado,
+        if (fechaNacimiento != null) 'fecha_nacimiento': fechaNacimiento,
+        if (telefono != null) 'telefono': telefono,
+        if (email != null) 'email': email,
+        if (claseMinisterio != null) 'clase_ministerio': claseMinisterio,
+      }),
+    );
+    _checkResponse(response);
+    return Map<String, dynamic>.from(jsonDecode(response.body));
+  }
+
+  /// Obtener solicitudes pendientes de aprobación
+  Future<List<Map<String, dynamic>>> getPendientes(String clubId, {String? ministerio}) async {
+    final params = <String, String>{'club_id': clubId};
+    if (ministerio != null) params['ministerio'] = ministerio;
+
+    final uri = Uri.parse('$_baseUrl/aprobaciones').replace(queryParameters: params);
+    final response = await http.get(uri, headers: _headers);
+    _checkResponse(response);
+
+    final body = jsonDecode(response.body);
+    return List<Map<String, dynamic>>.from(body['data']);
+  }
+
+  /// Aprobar o rechazar miembro
+  Future<void> aprobarMiembro({
+    required String clubId,
+    required String miembroId,
+    required String accion,
+    String? rol,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/aprobaciones'),
+      headers: _headers,
+      body: jsonEncode({
+        'club_id': clubId,
+        'miembro_id': miembroId,
+        'accion': accion,
+        if (rol != null) 'rol': rol,
+      }),
+    );
+    _checkResponse(response);
   }
 
   // ══════════════════════════════════════════

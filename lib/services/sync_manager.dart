@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'api_service.dart';
+import 'auth_service.dart';
 import 'database_service.dart';
 
 /// Servicio de sincronización automática offline-first.
@@ -38,6 +39,8 @@ class SyncManager {
     });
   }
 
+  String? get _clubId => AuthService().clubId;
+
   /// Subir todos los datos locales al servidor
   Future<void> _subirDatos() async {
     if (_syncing) return;
@@ -59,6 +62,7 @@ class SyncManager {
         unidades: unidades,
         unidadMiembros: unidadMiembros,
         asistencia: asistencia,
+        clubId: _clubId,
       );
 
       _syncController.add(SyncStatus.success);
@@ -71,6 +75,23 @@ class SyncManager {
     }
   }
 
+  // Helper to clean server fields that don't exist locally
+  Map<String, dynamic> _cleanForLocal(Map<String, dynamic> row, List<String> validColumns) {
+    final clean = <String, dynamic>{};
+    for (final entry in row.entries) {
+      if (validColumns.contains(entry.key)) {
+        clean[entry.key] = entry.value;
+      }
+    }
+    return clean;
+  }
+
+  static const _miembroCols = ['id','nombre','apellido','fecha_nacimiento','telefono','email','foto_url','clase','rol','activo','fecha_registro','usuario','password_hash','club_id','ministerio','clase_ministerio'];
+  static const _eventoCols = ['id','titulo','descripcion','fecha','hora','ubicacion','tipo','latitud','longitud','club_id','ministerio'];
+  static const _unidadCols = ['id','nombre','descripcion','activo','fecha_creacion','club_id','ministerio'];
+  static const _umCols = ['id','unidad_id','miembro_id','rol_en_unidad','fecha_asignacion'];
+  static const _asistCols = ['id','unidad_id','miembro_id','fecha','dia_semana','puntualidad','panoleta','biblia','cuota','registrado_por','fecha_registro','club_id'];
+
   /// Descargar datos del servidor y actualizar local
   Future<void> descargarDatos() async {
     if (_syncing) return;
@@ -78,52 +99,41 @@ class SyncManager {
     _syncController.add(SyncStatus.syncing);
 
     try {
-      final data = await _api.syncDescargar();
+      final data = await _api.syncDescargar(clubId: _clubId);
       final db = await _db.database;
 
-      // Miembros
       if (data['miembros'] != null) {
         for (final m in data['miembros']) {
-          await db.insert('miembros', Map<String, dynamic>.from(m),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final clean = _cleanForLocal(Map<String, dynamic>.from(m), _miembroCols);
+          await db.insert('miembros', clean, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
 
-      // Eventos
       if (data['eventos'] != null) {
         for (final e in data['eventos']) {
-          final evento = Map<String, dynamic>.from(e);
-          // Remover campos que no existen en SQLite local
-          evento.remove('created_at');
-          evento.remove('updated_at');
-          await db.insert('eventos', evento,
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final clean = _cleanForLocal(Map<String, dynamic>.from(e), _eventoCols);
+          await db.insert('eventos', clean, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
 
-      // Unidades
       if (data['unidades'] != null) {
         for (final u in data['unidades']) {
-          final unidad = Map<String, dynamic>.from(u);
-          unidad.remove('created_at');
-          await db.insert('unidades', unidad,
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final clean = _cleanForLocal(Map<String, dynamic>.from(u), _unidadCols);
+          await db.insert('unidades', clean, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
 
-      // Unidad-Miembros
       if (data['unidad_miembros'] != null) {
         for (final um in data['unidad_miembros']) {
-          await db.insert('unidad_miembros', Map<String, dynamic>.from(um),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final clean = _cleanForLocal(Map<String, dynamic>.from(um), _umCols);
+          await db.insert('unidad_miembros', clean, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
 
-      // Asistencia
       if (data['asistencia'] != null) {
         for (final a in data['asistencia']) {
-          await db.insert('asistencia', Map<String, dynamic>.from(a),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final clean = _cleanForLocal(Map<String, dynamic>.from(a), _asistCols);
+          await db.insert('asistencia', clean, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
 

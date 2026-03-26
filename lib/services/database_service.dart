@@ -24,7 +24,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), AppConfig.databaseName);
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -380,6 +380,51 @@ class DatabaseService {
           usuario_nombre TEXT,
           fecha TEXT NOT NULL
         )
+      ''');
+    }
+    if (oldVersion < 10) {
+      // Tabla clubes
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS clubes(
+          id TEXT PRIMARY KEY,
+          nombre TEXT NOT NULL,
+          iglesia TEXT NOT NULL,
+          ciudad TEXT NOT NULL,
+          pais TEXT DEFAULT 'México',
+          asociacion TEXT,
+          union_campo TEXT,
+          codigo_acceso TEXT,
+          ministerios TEXT DEFAULT 'gm',
+          plan TEXT DEFAULT 'gratis',
+          max_miembros INTEGER DEFAULT 20,
+          plan_expira TEXT,
+          activo INTEGER DEFAULT 1
+        )
+      ''');
+
+      // Agregar columnas multi-tenant a tablas existentes
+      try { await db.execute('ALTER TABLE miembros ADD COLUMN club_id TEXT'); } catch (_) {}
+      try { await db.execute("ALTER TABLE miembros ADD COLUMN ministerio TEXT DEFAULT 'gm'"); } catch (_) {}
+      try { await db.execute('ALTER TABLE miembros ADD COLUMN clase_ministerio TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE eventos ADD COLUMN club_id TEXT'); } catch (_) {}
+      try { await db.execute("ALTER TABLE eventos ADD COLUMN ministerio TEXT DEFAULT 'todos'"); } catch (_) {}
+      try { await db.execute('ALTER TABLE unidades ADD COLUMN club_id TEXT'); } catch (_) {}
+      try { await db.execute("ALTER TABLE unidades ADD COLUMN ministerio TEXT DEFAULT 'gm'"); } catch (_) {}
+      try { await db.execute('ALTER TABLE asistencia ADD COLUMN club_id TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE carpeta_secciones ADD COLUMN club_id TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE carpeta_requisitos ADD COLUMN club_id TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE carpeta_progreso ADD COLUMN club_id TEXT'); } catch (_) {}
+
+      // Migrar datos existentes al club Doulos
+      await db.execute("UPDATE miembros SET club_id = 'doulos-montemorelos', ministerio = 'gm' WHERE club_id IS NULL");
+      await db.execute("UPDATE eventos SET club_id = 'doulos-montemorelos', ministerio = 'todos' WHERE club_id IS NULL");
+      await db.execute("UPDATE unidades SET club_id = 'doulos-montemorelos', ministerio = 'gm' WHERE club_id IS NULL");
+      await db.execute("UPDATE asistencia SET club_id = 'doulos-montemorelos' WHERE club_id IS NULL");
+
+      // Insertar club Doulos
+      await db.execute('''
+        INSERT OR IGNORE INTO clubes (id, nombre, iglesia, ciudad, pais, codigo_acceso, ministerios, plan, max_miembros, activo)
+        VALUES ('doulos-montemorelos', 'Doulos', 'Iglesia Adventista Central', 'Montemorelos, NL', 'México', 'DOULOS2026', 'gm', 'gratis', 20, 1)
       ''');
     }
   }
@@ -1482,6 +1527,24 @@ class DatabaseService {
     final db = await database;
     final result = await db.query('configuracion');
     return {for (var r in result) r['clave'] as String: r['valor'] as String};
+  }
+
+  // ==================== CLUBES ====================
+
+  Future<Map<String, dynamic>?> getClub(String clubId) async {
+    final db = await database;
+    final result = await db.query('clubes', where: 'id = ?', whereArgs: [clubId]);
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<void> insertClub(Map<String, dynamic> club) async {
+    final db = await database;
+    await db.insert('clubes', club, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> updateClub(String clubId, Map<String, dynamic> values) async {
+    final db = await database;
+    await db.update('clubes', values, where: 'id = ?', whereArgs: [clubId]);
   }
 
   // ==================== EXPORTAR DATOS ====================

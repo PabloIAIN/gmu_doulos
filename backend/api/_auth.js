@@ -13,7 +13,7 @@ function verificarApiKey(req, res) {
 function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key, X-SuperAdmin-Key');
 }
 
 // ── Manejar preflight OPTIONS ──
@@ -27,4 +27,41 @@ function handleOptions(req, res) {
   return false;
 }
 
-module.exports = { verificarApiKey, setCorsHeaders, handleOptions };
+// ── Rate Limiting (en memoria) ──
+const rateLimitMap = new Map();
+
+function checkRateLimit(req, res, maxRequests = 30) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (entry && now < entry.resetAt) {
+    if (entry.count >= maxRequests) {
+      res.status(429).json({ error: 'Demasiadas solicitudes. Espera 1 minuto.' });
+      return false;
+    }
+    entry.count++;
+  } else {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 60000 });
+  }
+
+  // Limpiar entradas viejas cada 100 requests
+  if (rateLimitMap.size > 1000) {
+    for (const [key, val] of rateLimitMap) {
+      if (now > val.resetAt) rateLimitMap.delete(key);
+    }
+  }
+
+  return true;
+}
+
+// ── Validación de campos requeridos ──
+function validateRequired(body, fields) {
+  const missing = fields.filter(f => body[f] === undefined || body[f] === null || body[f] === '');
+  if (missing.length > 0) {
+    return { error: `Campos requeridos faltantes: ${missing.join(', ')}` };
+  }
+  return null;
+}
+
+module.exports = { verificarApiKey, setCorsHeaders, handleOptions, checkRateLimit, validateRequired };

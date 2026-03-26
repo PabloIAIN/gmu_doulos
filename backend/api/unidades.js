@@ -8,23 +8,30 @@ module.exports = async (req, res) => {
   try {
     switch (req.method) {
       case 'GET': {
-        const { id } = req.query;
+        const { id, club_id, ministerio } = req.query;
         if (id) {
           const rows = await sql`SELECT * FROM unidades WHERE id = ${id}`;
           if (rows.length === 0) return res.status(404).json({ error: 'Unidad no encontrada' });
           const miembros = await sql`SELECT um.*, m.nombre, m.apellido, m.rol, m.clase FROM unidad_miembros um JOIN miembros m ON m.id=um.miembro_id WHERE um.unidad_id=${id} ORDER BY m.nombre`;
           return res.status(200).json({ data: { ...rows[0], miembros } });
         }
-        const rows = await sql`SELECT * FROM unidades ORDER BY nombre`;
+        let rows;
+        if (club_id && ministerio && ministerio !== 'todos') {
+          rows = await sql`SELECT * FROM unidades WHERE club_id = ${club_id} AND ministerio = ${ministerio} ORDER BY nombre`;
+        } else if (club_id) {
+          rows = await sql`SELECT * FROM unidades WHERE club_id = ${club_id} ORDER BY nombre`;
+        } else {
+          rows = await sql`SELECT * FROM unidades ORDER BY nombre`;
+        }
         return res.status(200).json({ data: rows, total: rows.length });
       }
 
       case 'POST': {
-        const { id, nombre, descripcion, activo, fecha_creacion } = req.body;
+        const { id, nombre, descripcion, activo, fecha_creacion, club_id, ministerio } = req.body;
         if (!id || !nombre) return res.status(400).json({ error: 'id y nombre son requeridos' });
         await sql`
-          INSERT INTO unidades (id,nombre,descripcion,activo,fecha_creacion) VALUES (${id},${nombre},${descripcion||null},${activo!==undefined?activo:1},${fecha_creacion||new Date().toISOString()})
-          ON CONFLICT (id) DO UPDATE SET nombre=EXCLUDED.nombre,descripcion=EXCLUDED.descripcion,activo=EXCLUDED.activo`;
+          INSERT INTO unidades (id,nombre,descripcion,activo,fecha_creacion,club_id,ministerio) VALUES (${id},${nombre},${descripcion||null},${activo!==undefined?activo:1},${fecha_creacion||new Date().toISOString()},${club_id||null},${ministerio||'gm'})
+          ON CONFLICT (id) DO UPDATE SET nombre=EXCLUDED.nombre,descripcion=EXCLUDED.descripcion,activo=EXCLUDED.activo,club_id=EXCLUDED.club_id,ministerio=EXCLUDED.ministerio`;
         return res.status(201).json({ ok: true, id });
       }
 

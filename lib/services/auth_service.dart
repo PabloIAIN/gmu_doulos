@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import '../models/miembro.dart';
+import '../models/club.dart';
 import 'database_service.dart';
 import 'notification_service.dart';
 
@@ -11,31 +12,57 @@ class AuthService {
 
   final DatabaseService _db = DatabaseService();
   Miembro? _currentUser;
+  Club? currentClub;
+  String? clubId;
 
   Miembro? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null;
+  String get rol => _currentUser?.rol ?? '';
 
-  // ── Roles ──
+  // ── Roles por ministerio ──
+  bool get isDirectorGM => rol == 'Director GM' || rol == 'Director Asociado GM';
+  bool get isDirectorConq => rol == 'Director Conq' || rol == 'Director Asociado Conq';
+  bool get isDirectorAv => rol == 'Director Aventureros' || rol == 'Director Asociado Aventureros';
+
+  bool get isConsejeroGM => rol == 'Consejero GM' || rol == 'Secretario GM';
+  bool get isConsejeroConq => rol == 'Consejero Conq' || rol == 'Secretario Conq';
+  bool get isConsejeroAv => rol == 'Consejero Aventureros';
+
+  bool get isCoordinador => rol == 'Coordinador General';
+  bool get isAspirante => ['Aspirante GM', 'Conquistador', 'Aventurero'].contains(rol);
+
+  // ── Compatibilidad con roles legacy ──
   static const List<String> rolesAdmin = [
-    'Director',
-    'Director Asociado',
-    'Secretario',
-    'Tesorero',
+    'Director', 'Director Asociado', 'Secretario', 'Tesorero',
+    'Director GM', 'Director Asociado GM', 'Secretario GM', 'Tesorero GM',
+    'Director Conq', 'Director Asociado Conq', 'Secretario Conq',
+    'Director Aventureros', 'Director Asociado Aventureros',
   ];
 
   static const List<String> rolesConsejero = [
-    'Consejero',
-    'Instructor',
+    'Consejero', 'Instructor',
+    'Consejero GM', 'Consejero Conq', 'Consejero Aventureros',
   ];
 
   bool get isAdmin =>
-      _currentUser != null && rolesAdmin.contains(_currentUser!.rol);
+      _currentUser != null && (rolesAdmin.contains(rol) || isDirectorGM || isDirectorConq || isDirectorAv || isCoordinador);
 
   bool get isConsejero =>
-      _currentUser != null && rolesConsejero.contains(_currentUser!.rol);
+      _currentUser != null && (rolesConsejero.contains(rol) || isConsejeroGM || isConsejeroConq || isConsejeroAv);
 
-  bool get isAspirante =>
-      _currentUser != null && _currentUser!.rol == 'Miembro';
+  bool get hasClub => clubId != null;
+  bool get isPlanPro => currentClub?.esPro ?? false;
+
+  String get ministerioActivo {
+    if (rol.contains('GM') || rol == 'Aspirante GM') return 'gm';
+    if (rol.contains('Conq') || rol == 'Conquistador') return 'conq';
+    if (rol.contains('Aventureros') || rol == 'Aventurero') return 'av';
+    // Roles legacy sin ministerio específico
+    if (rolesAdmin.sublist(0, 4).contains(rol)) return 'gm';
+    if (rolesConsejero.sublist(0, 2).contains(rol)) return 'gm';
+    if (rol == 'Miembro') return 'gm';
+    return 'todos'; // Coordinador General
+  }
 
   // ── Hash ──
   String hashPassword(String plain) {
@@ -53,6 +80,9 @@ class AuthService {
 
     _currentUser = miembro;
     await _db.setConfig('session_user_id', miembro.id);
+
+    // Cargar club
+    await _cargarClub();
     await _suscribirTopics();
     return miembro;
   }
@@ -61,6 +91,8 @@ class AuthService {
   Future<void> logout() async {
     await _desuscribirTopics();
     _currentUser = null;
+    currentClub = null;
+    clubId = null;
     await _db.setConfig('session_user_id', '');
   }
 
@@ -76,8 +108,37 @@ class AuthService {
     }
 
     _currentUser = miembro;
+    await _cargarClub();
     await _suscribirTopics();
     return true;
+  }
+
+  // ── Cargar club del usuario ──
+  Future<void> _cargarClub() async {
+    // Intentar cargar club_id guardado
+    clubId = await _db.getConfig('current_club_id');
+    if (clubId != null && clubId!.isNotEmpty) {
+      try {
+        final clubData = await _db.getClub(clubId!);
+        if (clubData != null) {
+          currentClub = Club.fromMap(clubData);
+        }
+      } catch (_) {}
+    }
+    // Fallback al club por defecto
+    if (currentClub == null) {
+      clubId = 'doulos-montemorelos';
+      await _db.setConfig('current_club_id', clubId!);
+    }
+  }
+
+  // ── Establecer club actual ──
+  Future<void> setClub(Club club) async {
+    currentClub = club;
+    clubId = club.id;
+    await _db.setConfig('current_club_id', club.id);
+    // Guardar club en BD local
+    await _db.insertClub(club.toMap());
   }
 
   // ── FCM Topics ──
@@ -138,6 +199,11 @@ class AuthService {
     await _db.insertMiembro(miembro);
     _currentUser = miembro;
     await _db.setConfig('session_user_id', miembro.id);
+
+    // Asignar club por defecto
+    clubId = 'doulos-montemorelos';
+    await _db.setConfig('current_club_id', clubId!);
+
     await _suscribirTopics();
     return miembro;
   }

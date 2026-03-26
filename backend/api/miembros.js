@@ -8,14 +8,18 @@ module.exports = async (req, res) => {
   try {
     switch (req.method) {
       case 'GET': {
-        const { id, rol, activo } = req.query;
+        const { id, rol, activo, club_id, ministerio } = req.query;
         if (id) {
           const rows = await sql`SELECT * FROM miembros WHERE id = ${id}`;
           if (rows.length === 0) return res.status(404).json({ error: 'Miembro no encontrado' });
           return res.status(200).json({ data: rows[0] });
         }
         let rows;
-        if (rol && activo !== undefined) {
+        if (club_id && ministerio && ministerio !== 'todos') {
+          rows = await sql`SELECT * FROM miembros WHERE club_id = ${club_id} AND ministerio = ${ministerio} ORDER BY nombre`;
+        } else if (club_id) {
+          rows = await sql`SELECT * FROM miembros WHERE club_id = ${club_id} ORDER BY nombre`;
+        } else if (rol && activo !== undefined) {
           rows = await sql`SELECT * FROM miembros WHERE rol = ${rol} AND activo = ${parseInt(activo)} ORDER BY nombre`;
         } else if (rol) {
           rows = await sql`SELECT * FROM miembros WHERE rol = ${rol} ORDER BY nombre`;
@@ -28,23 +32,25 @@ module.exports = async (req, res) => {
       }
 
       case 'POST': {
-        const { id, nombre, apellido, fecha_nacimiento, telefono, email, foto_url, clase, rol, activo, fecha_registro, usuario, password_hash } = req.body;
+        const { id, nombre, apellido, fecha_nacimiento, telefono, email, foto_url, clase, rol, activo, fecha_registro, usuario, password_hash, club_id, ministerio, clase_ministerio } = req.body;
         if (!id || !nombre || !apellido) return res.status(400).json({ error: 'id, nombre y apellido son requeridos' });
         await sql`
-          INSERT INTO miembros (id,nombre,apellido,fecha_nacimiento,telefono,email,foto_url,clase,rol,activo,fecha_registro,usuario,password_hash)
-          VALUES (${id},${nombre},${apellido},${fecha_nacimiento||null},${telefono||null},${email||null},${foto_url||null},${clase||'Guía Mayor Aspirante'},${rol||'Miembro'},${activo!==undefined?activo:1},${fecha_registro||new Date().toISOString()},${usuario||null},${password_hash||null})
+          INSERT INTO miembros (id,nombre,apellido,fecha_nacimiento,telefono,email,foto_url,clase,rol,activo,fecha_registro,usuario,password_hash,club_id,ministerio,clase_ministerio)
+          VALUES (${id},${nombre},${apellido},${fecha_nacimiento||null},${telefono||null},${email||null},${foto_url||null},${clase||'Guía Mayor Aspirante'},${rol||'Miembro'},${activo!==undefined?activo:1},${fecha_registro||new Date().toISOString()},${usuario||null},${password_hash||null},${club_id||null},${ministerio||'gm'},${clase_ministerio||null})
           ON CONFLICT (id) DO UPDATE SET
             nombre=EXCLUDED.nombre,apellido=EXCLUDED.apellido,fecha_nacimiento=EXCLUDED.fecha_nacimiento,
             telefono=EXCLUDED.telefono,email=EXCLUDED.email,foto_url=EXCLUDED.foto_url,
             clase=EXCLUDED.clase,rol=EXCLUDED.rol,activo=EXCLUDED.activo,
-            usuario=EXCLUDED.usuario,password_hash=EXCLUDED.password_hash,updated_at=NOW()`;
+            usuario=EXCLUDED.usuario,password_hash=EXCLUDED.password_hash,
+            club_id=EXCLUDED.club_id,ministerio=EXCLUDED.ministerio,clase_ministerio=EXCLUDED.clase_ministerio,
+            updated_at=NOW()`;
         return res.status(201).json({ ok: true, id });
       }
 
       case 'PUT': {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'id es requerido' });
-        const { nombre, apellido, fecha_nacimiento, telefono, email, foto_url, clase, rol, activo, usuario, password_hash } = req.body;
+        const { nombre, apellido, fecha_nacimiento, telefono, email, foto_url, clase, rol, activo, usuario, password_hash, club_id, ministerio, clase_ministerio } = req.body;
         await sql`
           UPDATE miembros SET
             nombre=COALESCE(${nombre||null},nombre),apellido=COALESCE(${apellido||null},apellido),
@@ -53,15 +59,21 @@ module.exports = async (req, res) => {
             foto_url=COALESCE(${foto_url||null},foto_url),clase=COALESCE(${clase||null},clase),
             rol=COALESCE(${rol||null},rol),activo=COALESCE(${activo!==undefined?activo:null},activo),
             usuario=COALESCE(${usuario||null},usuario),password_hash=COALESCE(${password_hash||null},password_hash),
+            club_id=COALESCE(${club_id||null},club_id),ministerio=COALESCE(${ministerio||null},ministerio),
+            clase_ministerio=COALESCE(${clase_ministerio||null},clase_ministerio),
             updated_at=NOW()
           WHERE id=${id}`;
         return res.status(200).json({ ok: true, id });
       }
 
       case 'DELETE': {
-        const { id } = req.query;
+        const { id, club_id } = req.query;
         if (!id) return res.status(400).json({ error: 'id es requerido' });
-        await sql`DELETE FROM miembros WHERE id = ${id}`;
+        if (club_id) {
+          await sql`DELETE FROM miembros WHERE id = ${id} AND club_id = ${club_id}`;
+        } else {
+          await sql`DELETE FROM miembros WHERE id = ${id}`;
+        }
         return res.status(200).json({ ok: true, deleted: id });
       }
 

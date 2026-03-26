@@ -34,8 +34,10 @@ module.exports = async (req, res) => {
       endpoints: [
         '/api/miembros', '/api/eventos', '/api/asistencia',
         '/api/unidades', '/api/auth', '/api/sync', '/api/setup',
+        '/api/clubes', '/api/onboarding', '/api/unirse',
+        '/api/aprobaciones', '/api/seed-dia', '/api/reset-password',
       ],
-      version: '2.0.0',
+      version: '2.1.0',
     });
   } catch (error) {
     return res.status(200).json({

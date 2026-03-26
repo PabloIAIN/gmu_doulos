@@ -43,6 +43,9 @@ async function initDatabase() {
       fecha_registro TEXT NOT NULL,
       usuario TEXT,
       password_hash TEXT,
+      club_id TEXT,
+      ministerio TEXT DEFAULT 'gm',
+      clase_ministerio TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     )
@@ -59,6 +62,8 @@ async function initDatabase() {
       tipo TEXT DEFAULT 'reunion',
       latitud DOUBLE PRECISION,
       longitud DOUBLE PRECISION,
+      club_id TEXT,
+      ministerio TEXT DEFAULT 'todos',
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     )
@@ -71,6 +76,8 @@ async function initDatabase() {
       descripcion TEXT,
       activo INTEGER DEFAULT 1,
       fecha_creacion TEXT NOT NULL,
+      club_id TEXT,
+      ministerio TEXT DEFAULT 'gm',
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
@@ -97,7 +104,8 @@ async function initDatabase() {
       biblia TEXT DEFAULT '0',
       cuota TEXT DEFAULT '0',
       registrado_por TEXT,
-      fecha_registro TEXT
+      fecha_registro TEXT,
+      club_id TEXT
     )
   `;
 
@@ -114,10 +122,107 @@ async function initDatabase() {
     )
   `;
 
-  // Índices
+  // ── Tabla clubes ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS clubes (
+      id TEXT PRIMARY KEY,
+      nombre TEXT NOT NULL,
+      iglesia TEXT NOT NULL,
+      ciudad TEXT NOT NULL,
+      pais TEXT NOT NULL DEFAULT 'México',
+      asociacion TEXT,
+      union_campo TEXT,
+      division TEXT DEFAULT 'División Interamericana',
+      codigo_acceso TEXT UNIQUE NOT NULL,
+      ministerios TEXT DEFAULT 'gm',
+      plan TEXT DEFAULT 'gratis',
+      max_miembros INTEGER DEFAULT 20,
+      plan_expira TIMESTAMP,
+      activo INTEGER DEFAULT 1,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // ── Tablas de plantillas DIA ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS carpeta_secciones (
+      id TEXT PRIMARY KEY,
+      nombre TEXT NOT NULL,
+      orden INTEGER DEFAULT 0,
+      club_id TEXT
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS carpeta_requisitos (
+      id TEXT PRIMARY KEY,
+      seccion_id TEXT NOT NULL,
+      nombre TEXT NOT NULL,
+      orden INTEGER DEFAULT 0,
+      club_id TEXT
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS carpeta_progreso (
+      id TEXT PRIMARY KEY,
+      requisito_id TEXT NOT NULL,
+      miembro_id TEXT NOT NULL,
+      estado TEXT DEFAULT 'pendiente',
+      fecha_completado TEXT,
+      aprobado_por TEXT,
+      observaciones TEXT,
+      club_id TEXT
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS especialidades (
+      id TEXT PRIMARY KEY,
+      nombre TEXT NOT NULL,
+      categoria TEXT,
+      nivel TEXT,
+      club_id TEXT
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS miembro_especialidad (
+      id TEXT PRIMARY KEY,
+      miembro_id TEXT NOT NULL,
+      especialidad_id TEXT NOT NULL,
+      estado TEXT DEFAULT 'en_progreso',
+      fecha_inicio TEXT,
+      fecha_completado TEXT,
+      club_id TEXT
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS configuracion (
+      clave TEXT PRIMARY KEY,
+      valor TEXT
+    )
+  `;
+
+  // ── Índices ──
+  await sql`CREATE INDEX IF NOT EXISTS idx_clubes_codigo ON clubes(codigo_acceso)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_asistencia_fecha ON asistencia(fecha)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_asistencia_miembro ON asistencia(miembro_id)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_miembros_rol ON miembros(rol)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_miembros_club ON miembros(club_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_miembros_ministerio ON miembros(ministerio)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_eventos_club ON eventos(club_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_unidades_club ON unidades(club_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_asistencia_club ON asistencia(club_id)`;
+
+  // ── Migrar club existente "Doulos" ──
+  await sql`
+    INSERT INTO clubes (id, nombre, iglesia, ciudad, pais, codigo_acceso, ministerios, plan)
+    VALUES ('doulos-montemorelos', 'Doulos', 'Iglesia Adventista Central', 'Montemorelos, NL', 'México', 'DOULOS2026', 'gm', 'gratis')
+    ON CONFLICT (id) DO NOTHING
+  `;
 
   return { ok: true };
 }

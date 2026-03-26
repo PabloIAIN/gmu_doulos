@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
   try {
     switch (req.method) {
       case 'GET': {
-        const { unidad_id, miembro_id, fecha } = req.query;
+        const { unidad_id, miembro_id, fecha, club_id } = req.query;
         let rows;
         if (unidad_id && fecha) {
           rows = await sql`SELECT a.*, m.nombre, m.apellido FROM asistencia a JOIN miembros m ON m.id=a.miembro_id WHERE a.unidad_id=${unidad_id} AND a.fecha=${fecha} ORDER BY m.nombre`;
@@ -16,6 +16,8 @@ module.exports = async (req, res) => {
           rows = await sql`SELECT a.*, u.nombre as unidad_nombre FROM asistencia a JOIN unidades u ON u.id=a.unidad_id WHERE a.miembro_id=${miembro_id} ORDER BY a.fecha DESC`;
         } else if (unidad_id) {
           rows = await sql`SELECT a.*, m.nombre, m.apellido FROM asistencia a JOIN miembros m ON m.id=a.miembro_id WHERE a.unidad_id=${unidad_id} ORDER BY a.fecha DESC, m.nombre`;
+        } else if (club_id) {
+          rows = await sql`SELECT a.*, m.nombre, m.apellido FROM asistencia a JOIN miembros m ON m.id=a.miembro_id WHERE a.club_id=${club_id} ORDER BY a.fecha DESC LIMIT 100`;
         } else {
           rows = await sql`SELECT a.*, m.nombre, m.apellido FROM asistencia a JOIN miembros m ON m.id=a.miembro_id ORDER BY a.fecha DESC LIMIT 100`;
         }
@@ -23,12 +25,12 @@ module.exports = async (req, res) => {
       }
 
       case 'POST': {
-        const { id, unidad_id, miembro_id, fecha, dia_semana, puntualidad, panoleta, biblia, cuota, registrado_por, fecha_registro } = req.body;
+        const { id, unidad_id, miembro_id, fecha, dia_semana, puntualidad, panoleta, biblia, cuota, registrado_por, fecha_registro, club_id } = req.body;
         if (!id || !unidad_id || !miembro_id || !fecha) return res.status(400).json({ error: 'id, unidad_id, miembro_id y fecha son requeridos' });
         await sql`
-          INSERT INTO asistencia (id,unidad_id,miembro_id,fecha,dia_semana,puntualidad,panoleta,biblia,cuota,registrado_por,fecha_registro)
-          VALUES (${id},${unidad_id},${miembro_id},${fecha},${dia_semana||null},${puntualidad||0},${panoleta||0},${biblia||0},${cuota||0},${registrado_por||null},${fecha_registro||new Date().toISOString()})
-          ON CONFLICT (id) DO UPDATE SET puntualidad=EXCLUDED.puntualidad,panoleta=EXCLUDED.panoleta,biblia=EXCLUDED.biblia,cuota=EXCLUDED.cuota,registrado_por=EXCLUDED.registrado_por`;
+          INSERT INTO asistencia (id,unidad_id,miembro_id,fecha,dia_semana,puntualidad,panoleta,biblia,cuota,registrado_por,fecha_registro,club_id)
+          VALUES (${id},${unidad_id},${miembro_id},${fecha},${dia_semana||null},${puntualidad||0},${panoleta||0},${biblia||0},${cuota||0},${registrado_por||null},${fecha_registro||new Date().toISOString()},${club_id||null})
+          ON CONFLICT (id) DO UPDATE SET puntualidad=EXCLUDED.puntualidad,panoleta=EXCLUDED.panoleta,biblia=EXCLUDED.biblia,cuota=EXCLUDED.cuota,registrado_por=EXCLUDED.registrado_por,club_id=EXCLUDED.club_id`;
         return res.status(201).json({ ok: true, id });
       }
 
@@ -38,9 +40,9 @@ module.exports = async (req, res) => {
         let insertados = 0;
         for (const r of registros) {
           await sql`
-            INSERT INTO asistencia (id,unidad_id,miembro_id,fecha,dia_semana,puntualidad,panoleta,biblia,cuota,registrado_por,fecha_registro)
-            VALUES (${r.id},${r.unidad_id},${r.miembro_id},${r.fecha},${r.dia_semana||null},${r.puntualidad||0},${r.panoleta||0},${r.biblia||0},${r.cuota||0},${r.registrado_por||null},${r.fecha_registro||new Date().toISOString()})
-            ON CONFLICT (id) DO UPDATE SET puntualidad=EXCLUDED.puntualidad,panoleta=EXCLUDED.panoleta,biblia=EXCLUDED.biblia,cuota=EXCLUDED.cuota`;
+            INSERT INTO asistencia (id,unidad_id,miembro_id,fecha,dia_semana,puntualidad,panoleta,biblia,cuota,registrado_por,fecha_registro,club_id)
+            VALUES (${r.id},${r.unidad_id},${r.miembro_id},${r.fecha},${r.dia_semana||null},${r.puntualidad||0},${r.panoleta||0},${r.biblia||0},${r.cuota||0},${r.registrado_por||null},${r.fecha_registro||new Date().toISOString()},${r.club_id||null})
+            ON CONFLICT (id) DO UPDATE SET puntualidad=EXCLUDED.puntualidad,panoleta=EXCLUDED.panoleta,biblia=EXCLUDED.biblia,cuota=EXCLUDED.cuota,club_id=EXCLUDED.club_id`;
           insertados++;
         }
         return res.status(200).json({ ok: true, insertados });

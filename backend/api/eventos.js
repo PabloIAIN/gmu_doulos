@@ -8,25 +8,30 @@ module.exports = async (req, res) => {
   try {
     switch (req.method) {
       case 'GET': {
-        const { id, tipo } = req.query;
+        const { id, tipo, club_id, ministerio } = req.query;
         if (id) {
           const rows = await sql`SELECT * FROM eventos WHERE id = ${id}`;
           if (rows.length === 0) return res.status(404).json({ error: 'Evento no encontrado' });
           return res.status(200).json({ data: rows[0] });
         }
-        const rows = tipo
-          ? await sql`SELECT * FROM eventos WHERE tipo = ${tipo} ORDER BY fecha DESC`
-          : await sql`SELECT * FROM eventos ORDER BY fecha DESC`;
+        let rows;
+        if (club_id) {
+          rows = await sql`SELECT * FROM eventos WHERE club_id = ${club_id} ORDER BY fecha DESC`;
+        } else if (tipo) {
+          rows = await sql`SELECT * FROM eventos WHERE tipo = ${tipo} ORDER BY fecha DESC`;
+        } else {
+          rows = await sql`SELECT * FROM eventos ORDER BY fecha DESC`;
+        }
         return res.status(200).json({ data: rows, total: rows.length });
       }
 
       case 'POST': {
-        const { id, titulo, descripcion, fecha, hora, ubicacion, tipo, latitud, longitud } = req.body;
+        const { id, titulo, descripcion, fecha, hora, ubicacion, tipo, latitud, longitud, club_id, ministerio } = req.body;
         if (!id || !titulo || !fecha) return res.status(400).json({ error: 'id, titulo y fecha son requeridos' });
         await sql`
-          INSERT INTO eventos (id,titulo,descripcion,fecha,hora,ubicacion,tipo,latitud,longitud)
-          VALUES (${id},${titulo},${descripcion||null},${fecha},${hora||null},${ubicacion||null},${tipo||'reunion'},${latitud||null},${longitud||null})
-          ON CONFLICT (id) DO UPDATE SET titulo=EXCLUDED.titulo,descripcion=EXCLUDED.descripcion,fecha=EXCLUDED.fecha,hora=EXCLUDED.hora,ubicacion=EXCLUDED.ubicacion,tipo=EXCLUDED.tipo,latitud=EXCLUDED.latitud,longitud=EXCLUDED.longitud,updated_at=NOW()`;
+          INSERT INTO eventos (id,titulo,descripcion,fecha,hora,ubicacion,tipo,latitud,longitud,club_id,ministerio)
+          VALUES (${id},${titulo},${descripcion||null},${fecha},${hora||null},${ubicacion||null},${tipo||'reunion'},${latitud||null},${longitud||null},${club_id||null},${ministerio||'todos'})
+          ON CONFLICT (id) DO UPDATE SET titulo=EXCLUDED.titulo,descripcion=EXCLUDED.descripcion,fecha=EXCLUDED.fecha,hora=EXCLUDED.hora,ubicacion=EXCLUDED.ubicacion,tipo=EXCLUDED.tipo,latitud=EXCLUDED.latitud,longitud=EXCLUDED.longitud,club_id=EXCLUDED.club_id,ministerio=EXCLUDED.ministerio,updated_at=NOW()`;
         return res.status(201).json({ ok: true, id });
       }
 

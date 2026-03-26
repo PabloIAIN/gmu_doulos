@@ -5,6 +5,11 @@ abstract class AppConfig {
   static const String appBuildNumber = '2';
   static const String division = 'División Interamericana';
   static const String tagline = '"Siervos de Cristo"';
+
+  // Defaults for backwards compatibility
+  static const String clubName = 'Club de Guías Mayores';
+  static const String location = 'Montemorelos, Nuevo León';
+  static const String church = 'Iglesia Adventista Central';
   static const String appNameWithVersion = '$appName v$appVersion';
 
   // Technical identifiers

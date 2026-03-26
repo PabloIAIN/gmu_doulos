@@ -21,7 +21,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       icon: Icons.shield,
       title: 'Bienvenido a ${AppConfig.appName}',
       description:
-          'La app para gestionar tu ${AppConfig.clubName}.\n'
+          'La app para gestionar tu club de ministerios juveniles.\n'
           'Organiza miembros, unidades, asistencia y mas.',
       color: AppTheme.primaryGreen,
     ),

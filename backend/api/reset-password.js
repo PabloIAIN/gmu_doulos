@@ -1,12 +1,6 @@
 const { sql } = require('./_db');
 const { verificarApiKey, handleOptions, checkRateLimit } = require('./_auth');
-const crypto = require('crypto');
-
-const SALT = 'gmu_doulos_salt_2025_';
-
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(SALT + password).digest('hex');
-}
+const bcrypt = require('bcryptjs');
 
 module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;
@@ -37,7 +31,7 @@ module.exports = async (req, res) => {
     }
 
     // Resetear contraseña
-    const passwordHash = hashPassword(nueva_password);
+    const passwordHash = await bcrypt.hash(nueva_password, 10);
     await sql`UPDATE miembros SET password_hash = ${passwordHash}, updated_at = NOW() WHERE id = ${miembro_id} AND club_id = ${club_id}`;
 
     return res.status(200).json({ ok: true, mensaje: 'Contraseña actualizada correctamente' });

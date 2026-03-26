@@ -1,12 +1,6 @@
 const { sql } = require('./_db');
 const { handleOptions } = require('./_auth');
-const crypto = require('crypto');
-
-const SALT = 'gmu_doulos_salt_2025_';
-
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(SALT + password).digest('hex');
-}
+const bcrypt = require('bcryptjs');
 
 // Mapea ministerio + tipo a rol final
 function getRolFinal(ministerio, tipoRol) {
@@ -69,7 +63,7 @@ module.exports = async (req, res) => {
 
     // 6. Crear miembro con activo = 0 (pendiente aprobación)
     const id = Date.now().toString() + Math.random().toString(36).substring(2, 8);
-    const passwordHash = hashPassword(password);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     await sql`
       INSERT INTO miembros (id, nombre, apellido, fecha_nacimiento, telefono, email, clase, rol, activo, fecha_registro, usuario, password_hash, club_id, ministerio, clase_ministerio)

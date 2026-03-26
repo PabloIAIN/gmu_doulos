@@ -1,4 +1,4 @@
-package com.example.gmu_doulos
+package com.gmudoulos.app
 
 import io.flutter.embedding.android.FlutterActivity
 

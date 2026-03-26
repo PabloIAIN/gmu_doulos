@@ -1,12 +1,6 @@
 const { sql } = require('./_db');
 const { handleOptions } = require('./_auth');
-const crypto = require('crypto');
-
-const SALT = 'gmu_doulos_salt_2025_';
-
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(SALT + password).digest('hex');
-}
+const bcrypt = require('bcryptjs');
 
 // Mapea ministerio a rol de Director
 function getRolDirector(ministerio) {
@@ -70,14 +64,39 @@ module.exports = async (req, res) => {
 
     // 6. Crear el miembro Director
     const id = Date.now().toString() + Math.random().toString(36).substring(2, 8);
-    const passwordHash = hashPassword(password);
+    const passwordHash = await bcrypt.hash(password, 10);
     const claseDefault = ministerio === 'gm' ? 'Guía Mayor Avanzado' : '';
 
     await sql`
       INSERT INTO miembros (id, nombre, apellido, clase, rol, activo, fecha_registro, usuario, password_hash, club_id, ministerio)
       VALUES (${id}, ${nombre}, ${apellido}, ${claseDefault}, ${rol}, 1, ${new Date().toISOString()}, ${usuario}, ${passwordHash}, ${club.id}, ${ministerio === 'coordinador' ? 'todos' : ministerio})`;
 
-    // 7. Retornar datos
+    // 7. Copiar plantilla DIA al club según ministerio
+    const ministeriosClub = club.ministerios.split(',').map(m => m.trim());
+    for (const min of ministeriosClub) {
+      const templateId = min === 'gm' ? 'DIA_TEMPLATE_GM' : min === 'conq' ? 'DIA_TEMPLATE_CONQ' : min === 'av' ? 'DIA_TEMPLATE_AV' : null;
+      if (!templateId) continue;
+
+      // Verificar si ya se copiaron las secciones para este club+ministerio
+      const existing = await sql`SELECT COUNT(*) as c FROM carpeta_secciones WHERE club_id = ${club.id}`;
+      if (parseInt(existing[0].c) > 0) continue;
+
+      // Copiar secciones
+      const secciones = await sql`SELECT * FROM carpeta_secciones WHERE club_id = ${templateId}`;
+      for (const s of secciones) {
+        const newId = `${club.id}-${s.id}`;
+        await sql`INSERT INTO carpeta_secciones (id, nombre, orden, club_id) VALUES (${newId}, ${s.nombre}, ${s.orden}, ${club.id}) ON CONFLICT (id) DO NOTHING`;
+
+        // Copiar requisitos de esta sección
+        const requisitos = await sql`SELECT * FROM carpeta_requisitos WHERE seccion_id = ${s.id} AND club_id = ${templateId}`;
+        for (const r of requisitos) {
+          const newRid = `${club.id}-${r.id}`;
+          await sql`INSERT INTO carpeta_requisitos (id, seccion_id, nombre, orden, club_id) VALUES (${newRid}, ${newId}, ${r.nombre}, ${r.orden}, ${club.id}) ON CONFLICT (id) DO NOTHING`;
+        }
+      }
+    }
+
+    // 8. Retornar datos
     return res.status(201).json({
       ok: true,
       club: { id: club.id, nombre: club.nombre, iglesia: club.iglesia, ciudad: club.ciudad, ministerios: club.ministerios },

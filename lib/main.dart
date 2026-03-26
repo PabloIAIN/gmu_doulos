@@ -12,7 +12,7 @@ import 'screens/manual/manual_screen.dart';
 import 'screens/ajustes/ajustes_screen.dart';
 import 'screens/notificaciones/notificaciones_screen.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/auth/first_run_setup_screen.dart';
+import 'screens/onboarding/club_setup_screen.dart';
 import 'screens/unidades/unidades_screen.dart';
 import 'screens/unidades/consejero_unidad_screen.dart';
 import 'screens/carpeta/carpeta_screen.dart';
@@ -188,7 +188,7 @@ class _AuthGateState extends State<AuthGate> {
     }
 
     if (_isFirstRun) {
-      return FirstRunSetupScreen(onSetupComplete: _onSetupComplete);
+      return ClubSetupScreen(onSetupComplete: _onSetupComplete);
     }
 
     if (!_isLoggedIn) {

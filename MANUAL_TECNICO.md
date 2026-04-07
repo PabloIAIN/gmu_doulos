@@ -1,984 +1,819 @@
-# Manual Tecnico y de Desarrollo - GMU Doulos
+# Manual Tecnico y de Desarrollo - GMU Doulos v2.0
 
-## Guia Tecnica para Desarrolladores
-
-**Version:** 1.1.0
-**Fecha:** Marzo 2026
+**Plataforma multi-tenant de gestion para clubes de Ministerios Juveniles Adventistas**
+*Division Interamericana*
 
 ---
 
-## Tabla de Contenidos
+## Tabla de contenido
 
-1. [Introduccion y Vision General](#1-introduccion-y-vision-general)
-2. [Requisitos del Entorno de Desarrollo](#2-requisitos-del-entorno-de-desarrollo)
-3. [Estructura del Proyecto](#3-estructura-del-proyecto)
-4. [Base de Datos](#4-base-de-datos)
-5. [API REST](#5-api-rest)
-6. [Servicios de la Aplicacion](#6-servicios-de-la-aplicacion)
-7. [Sistema de Autenticacion](#7-sistema-de-autenticacion)
-8. [Sincronizacion Offline-First](#8-sincronizacion-offline-first)
-9. [Notificaciones Push](#9-notificaciones-push)
-10. [Generacion de Reportes PDF](#10-generacion-de-reportes-pdf)
-11. [Sistema de Roles y Permisos](#11-sistema-de-roles-y-permisos)
-12. [Tema y Diseno](#12-tema-y-diseno)
-13. [Compilacion y Despliegue](#13-compilacion-y-despliegue)
-14. [Variables de Entorno y Configuracion](#14-variables-de-entorno-y-configuracion)
-15. [Mantenimiento y Troubleshooting](#15-mantenimiento-y-troubleshooting)
-
----
-
-## 1. Introduccion y Vision General
-
-GMU Doulos es una aplicacion movil desarrollada con Flutter que sigue una arquitectura offline-first con sincronizacion automatica hacia un backend REST serverless. El sistema esta disenado para funcionar de manera confiable tanto con como sin conexion a internet.
-
-### Stack Tecnologico
-
-```
-Frontend:  Flutter 3.x + Dart (Material 3)
-Backend:   Node.js Serverless Functions (Vercel)
-DB Cloud:  PostgreSQL (Neon Serverless)
-DB Local:  SQLite (sqflite)
-Push:      Firebase Cloud Messaging
-CI/CD:     Vercel (auto-deploy desde GitHub)
-```
-
-### Principios de Diseno
-
-- **Offline-First:** Los datos se persisten localmente antes de sincronizar
-- **Singleton Services:** Servicios como patron singleton para estado global
-- **Role-Based Access Control:** Tres niveles de permisos
-- **Material 3:** Diseno moderno con soporte dark mode
-- **Serverless:** Backend sin servidores dedicados, escala automaticamente
+1. [Vision general](#vision-general)
+2. [Arquitectura del sistema](#arquitectura)
+3. [Stack tecnologico](#stack)
+4. [Estructura del proyecto](#estructura)
+5. [Base de datos](#base-de-datos)
+6. [Backend REST API](#backend-rest-api)
+7. [Servicios Flutter](#servicios-flutter)
+8. [Seguridad](#seguridad)
+9. [Sincronizacion offline-first](#sincronizacion)
+10. [Multi-tenancy](#multi-tenancy)
+11. [Sistema de roles](#sistema-de-roles)
+12. [Compilacion y despliegue](#compilacion)
+13. [Variables de entorno](#variables-de-entorno)
+14. [Testing y debugging](#testing)
+15. [Mantenimiento](#mantenimiento)
 
 ---
 
-## 2. Requisitos del Entorno de Desarrollo
+## Vision general
 
-### Software Requerido
+GMU Doulos es una plataforma **offline-first multi-tenant** que combina:
 
-| Herramienta | Version Minima | Proposito |
-|-------------|---------------|-----------|
-| Flutter SDK | 3.0.0 | Framework de desarrollo |
-| Dart SDK | 3.0.0 | Incluido con Flutter |
-| Android Studio | 2023.x | IDE y Android SDK |
-| Android SDK | API 21+ (min), API 34 (target) | Compilacion Android |
-| Node.js | 18.x | Backend local |
-| Git | 2.x | Control de versiones |
-| Vercel CLI | 50.x | Despliegue del backend |
-| Java JDK | 17 | Compilacion Android (Gradle) |
-
-### Configuracion Inicial
-
-```bash
-# Clonar repositorio
-git clone https://github.com/PabloIAIN/gmu_doulos.git
-cd gmu_doulos
-
-# Instalar dependencias de Flutter
-flutter pub get
-
-# Verificar entorno
-flutter doctor
-
-# Ejecutar en modo debug
-flutter run
-
-# Instalar dependencias del backend
-cd backend
-npm install
-```
-
-### Estructura de Android SDK
-
-El proyecto usa las siguientes configuraciones en `android/app/build.gradle.kts`:
-
-```kotlin
-android {
-    compileSdk = flutter.compileSdkVersion  // 34
-    minSdk = flutter.minSdkVersion          // 21 (Android 5.0)
-    targetSdk = flutter.targetSdkVersion    // 34
-}
-```
+- **Frontend movil:** Flutter 3.x + Dart con Material Design 3
+- **Backend serverless:** Node.js en Vercel
+- **Base de datos cloud:** PostgreSQL en Neon (serverless)
+- **Base de datos local:** SQLite via sqflite (cache offline)
+- **Autenticacion:** bcrypt + API key con rate limiting
+- **Notificaciones push:** Firebase Cloud Messaging (FCM)
 
 ---
 
-## 3. Estructura del Proyecto
+## Arquitectura
+
+```
++--------------------------------------------------+
+|              CLIENTE FLUTTER (Android)           |
+|                                                  |
+|  +-----------+  +-----------+  +-----------+    |
+|  |  Screens  |  |  Widgets  |  |  Models   |    |
+|  +-----------+  +-----------+  +-----------+    |
+|         |             |             |           |
+|         +-------------+-------------+           |
+|                       |                          |
+|         +--------------------------+             |
+|         |   Servicios (Singleton)  |             |
+|         |  - AuthService           |             |
+|         |  - DatabaseService       |             |
+|         |  - ApiService            |             |
+|         |  - SyncManager           |             |
+|         |  - NotificationService   |             |
+|         |  - PdfService            |             |
+|         +-------+----------+-------+             |
+|                 |          |                     |
+|         +-------v---+  +---v--------+            |
+|         |  SQLite   |  |  Backend   |            |
+|         |  (local)  |  |    HTTP    |            |
+|         +-----------+  +-----+------+            |
++--------------------------------|----------------+
+                                 |
+                                 v
+              +------------------+----------------+
+              |   BACKEND REST API en Vercel      |
+              |                                   |
+              |  +-----------+  +-------------+  |
+              |  | api/*.js  |  | _auth.js    |  |
+              |  | (12 fns)  |  | _db.js      |  |
+              |  +-----+-----+  +------+------+  |
+              |        |               |          |
+              |        +---------------+          |
+              |                |                  |
+              |        +-------v-------+          |
+              |        |  PostgreSQL   |          |
+              |        |  (Neon)       |          |
+              |        +---------------+          |
+              +-----------------------------------+
+```
+
+**Flujo offline-first:**
+
+1. Usuario crea/edita datos en la app
+2. Se guardan **inmediatamente** en SQLite local
+3. SyncManager detecta el cambio y agenda sincronizacion
+4. Despues de **3 segundos** (debounce), envia los datos al backend
+5. Backend hace UPSERT en PostgreSQL
+6. Si no hay internet, los datos quedan en cola hasta que vuelva la conexion
+
+---
+
+## Stack
+
+| Componente | Tecnologia | Version |
+|------------|-----------|---------|
+| **UI Framework** | Flutter | 3.x |
+| **Lenguaje** | Dart | 3.x |
+| **Design system** | Material 3 | - |
+| **Tipografia** | Google Fonts (Poppins) | 6.3.3 |
+| **DB local** | sqflite (SQLite) | 2.3.0 |
+| **HTTP client** | http | 1.2.0 |
+| **PDF** | pdf | 3.11.1 |
+| **Charts** | fl_chart | 0.69.0 |
+| **Camera/Gallery** | image_picker | 1.0.7 |
+| **Permisos** | permission_handler | 11.3.0 |
+| **Push notifs** | firebase_messaging | 15.2.10 |
+| **Notifs locales** | flutter_local_notifications | 18.0.1 |
+| **Compartir** | share_plus | 10.1.4 |
+| **Backend runtime** | Node.js | 20.x |
+| **Backend host** | Vercel Serverless | - |
+| **DB cloud** | PostgreSQL (Neon) | 16 |
+| **DB driver** | @neondatabase/serverless | 0.9.0 |
+| **Auth hashing** | bcryptjs | 2.4.3 |
+| **CI/CD** | GitHub + Vercel auto-deploy | - |
+
+---
+
+## Estructura
 
 ```
 gmu_doulos/
-├── android/                    # Configuracion nativa Android
-│   └── app/
-│       ├── build.gradle.kts    # Build config, signing, ProGuard
-│       ├── proguard-rules.pro  # Reglas de ofuscacion
-│       └── src/main/
-│           ├── AndroidManifest.xml
-│           ├── kotlin/.../MainActivity.kt
-│           └── res/            # Iconos, splash, estilos
-│
-├── backend/                    # Backend serverless (Vercel)
-│   ├── api/                    # Endpoints (cada archivo = una ruta)
-│   │   ├── _db.js              # Conexion a PostgreSQL (Neon)
-│   │   ├── _auth.js            # Middleware de autenticacion
-│   │   ├── miembros.js         # CRUD de miembros
-│   │   ├── eventos.js          # CRUD de eventos
-│   │   ├── unidades.js         # CRUD de unidades
-│   │   ├── asistencia.js       # CRUD de asistencia
-│   │   ├── auth.js             # Login
-│   │   ├── sync.js             # Sincronizacion masiva
-│   │   ├── health.js           # Health check
-│   │   ├── setup.js            # Inicializacion de BD
-│   │   └── send-notification.js # Envio de notificaciones FCM
-│   ├── lib/                    # Modulos compartidos (legacy)
-│   │   ├── db.js
-│   │   └── auth.js
-│   ├── schema.sql              # Esquema completo de la BD
-│   ├── package.json            # Dependencias Node.js
-│   └── package-lock.json
-│
-├── ios/                        # Configuracion nativa iOS
-│
-├── lib/                        # Codigo fuente Flutter/Dart
-│   ├── main.dart               # Punto de entrada, navegacion, tema
-│   ├── config/
-│   │   └── app_config.dart     # Constantes de la aplicacion
-│   ├── theme/
-│   │   └── app_theme.dart      # Tema Material 3 (colores, tipografia)
-│   ├── models/
-│   │   ├── miembro.dart        # Modelo de miembro con clases/roles
-│   │   └── evento.dart         # Modelo de evento
-│   ├── services/
-│   │   ├── auth_service.dart       # Autenticacion (singleton)
-│   │   ├── database_service.dart   # SQLite local (singleton)
-│   │   ├── api_service.dart        # Cliente REST API (singleton)
-│   │   ├── sync_manager.dart       # Sincronizacion automatica
-│   │   ├── notification_service.dart # FCM + notificaciones locales
-│   │   └── pdf_service.dart        # Generacion de PDFs
-│   ├── widgets/
-│   │   ├── gradient_card.dart      # Tarjeta con gradiente
-│   │   ├── stat_card.dart          # Tarjeta de estadistica
-│   │   ├── section_header.dart     # Encabezado de seccion
-│   │   ├── quick_action_button.dart # Boton de accion rapida
-│   │   ├── empty_state.dart        # Estado vacio
-│   │   ├── skeleton_loader.dart    # Loader animado
-│   │   ├── error_retry.dart        # Error con reintento
-│   │   └── user_avatar.dart        # Avatar de usuario
-│   └── screens/
-│       ├── home_screen.dart
-│       ├── auth/
-│       │   ├── login_screen.dart
-│       │   └── first_run_setup_screen.dart
-│       ├── onboarding/
-│       │   └── onboarding_screen.dart
-│       ├── miembros/
-│       │   └── miembros_screen.dart
-│       ├── perfil/
-│       │   └── perfil_screen.dart
-│       ├── busqueda/
-│       │   └── busqueda_screen.dart
-│       ├── asistencia/
-│       │   ├── asistencia_screen.dart
-│       │   └── historial_asistencia_screen.dart
-│       ├── calendario/
-│       │   └── calendario_screen.dart
-│       ├── carpeta/
-│       │   ├── carpeta_screen.dart
-│       │   ├── carpeta_review_screen.dart
-│       │   ├── carpeta_approve_screen.dart
-│       │   └── carpeta_manage_screen.dart
-│       ├── unidades/
-│       │   ├── unidades_screen.dart
-│       │   └── consejero_unidad_screen.dart
-│       ├── admin/
-│       │   ├── admin_panel_screen.dart
-│       │   ├── gestion_cuentas_screen.dart
-│       │   ├── importar_miembros_screen.dart
-│       │   └── sync_screen.dart
-│       ├── reportes/
-│       │   └── reportes_screen.dart
-│       ├── estadisticas/
-│       │   └── estadisticas_screen.dart
-│       ├── especialidades/
-│       │   └── especialidades_screen.dart
-│       ├── evidencias/
-│       │   └── evidencias_screen.dart
-│       ├── herramientas/
-│       │   └── herramientas_screen.dart
-│       ├── manual/
-│       │   └── manual_screen.dart
-│       ├── mapas/
-│       │   └── mapas_screen.dart
-│       ├── notificaciones/
-│       │   └── notificaciones_screen.dart
-│       └── ajustes/
-│           ├── ajustes_screen.dart
-│           ├── backup_screen.dart
-│           └── audit_log_screen.dart
-│
-├── assets/                     # Recursos estaticos
-│   └── images/
-│       └── club_logo.png       # Logo del club
-│
-├── web/                        # Configuracion web (splash)
-├── pubspec.yaml                # Dependencias y configuracion Flutter
-├── MANUAL_USUARIO.md           # Manual del usuario
-├── MANUAL_TECNICO.md           # Este documento
-├── DOCUMENTACION_PROYECTO.md   # Documentacion academica
-└── .gitignore
++-- backend/
+|   +-- api/
+|   |   +-- _auth.js              # Middleware: API key + rate limit
+|   |   +-- _db.js                # Cliente PostgreSQL + initDatabase
+|   |   +-- auth.js               # POST: login con bcrypt
+|   |   +-- miembros.js           # CRUD miembros
+|   |   +-- eventos.js            # CRUD eventos
+|   |   +-- unidades.js           # CRUD unidades
+|   |   +-- asistencia.js         # CRUD asistencia
+|   |   +-- clubes.js             # Multi-club + onboarding/unirse/aprobar
+|   |   +-- sync.js               # Sincronizacion masiva
+|   |   +-- setup.js              # Init de tablas
+|   |   +-- health.js             # Health check
+|   |   +-- send-notification.js  # FCM server-side
+|   +-- package.json
+|   +-- vercel.json               # Config de deploy
+|
++-- lib/
+|   +-- main.dart                 # Entry point + AuthGate + MainNavigation
+|   +-- config/
+|   |   +-- app_config.dart       # Constantes (clubes, ministerios, roles)
+|   +-- theme/
+|   |   +-- app_theme.dart        # Material 3 (verde #2E7D32, dorado #FFC107)
+|   +-- models/
+|   |   +-- miembro.dart
+|   |   +-- evento.dart
+|   |   +-- club.dart             # NEW v2: modelo multi-tenant
+|   +-- services/                 # Singletons
+|   |   +-- auth_service.dart     # Sesion, roles multi-ministerio
+|   |   +-- database_service.dart # SQLite v10 (multi-tenant)
+|   |   +-- api_service.dart      # Cliente HTTP REST con UTF-8
+|   |   +-- sync_manager.dart     # Debounce 3s + auto-sync
+|   |   +-- notification_service.dart
+|   |   +-- pdf_service.dart
+|   +-- screens/                  # 30+ pantallas por modulo
+|   |   +-- onboarding/
+|   |   |   +-- onboarding_screen.dart
+|   |   |   +-- club_setup_screen.dart   # NEW v2: 3 flujos
+|   |   +-- auth/
+|   |   |   +-- login_screen.dart
+|   |   |   +-- first_run_setup_screen.dart
+|   |   +-- admin/
+|   |   |   +-- admin_panel_screen.dart
+|   |   |   +-- aprobaciones_screen.dart # NEW v2
+|   |   |   +-- gestion_cuentas_screen.dart
+|   |   |   +-- importar_miembros_screen.dart
+|   |   |   +-- sync_screen.dart
+|   |   +-- ajustes/
+|   |   |   +-- ajustes_screen.dart
+|   |   |   +-- plan_screen.dart         # NEW v2: Freemium
+|   |   +-- (miembros, unidades, calendario, carpeta, reportes, etc.)
+|   +-- widgets/                  # Componentes reutilizables
+|
++-- android/
+|   +-- app/
+|       +-- build.gradle.kts      # Signing, ProGuard, minSdk 21
+|       +-- key.properties        # NO en git
+|       +-- gmu_doulos_keystore.jks # NO en git
+|       +-- src/main/AndroidManifest.xml
+|
++-- assets/
+|   +-- images/                   # Logo, splash
+|   +-- fonts/
+|
++-- pubspec.yaml                  # Dependencias Dart
++-- MANUAL_USUARIO.md
++-- MANUAL_TECNICO.md             # Este archivo
++-- DOCUMENTACION_PROYECTO.md
++-- README.md
 ```
 
 ---
 
-## 4. Base de Datos
+## Base de datos
 
-### Base de Datos Local (SQLite)
+### Esquema PostgreSQL (cloud)
 
-El servicio `DatabaseService` gestiona la base de datos local SQLite. El esquema se inicializa en `_onCreate` y se migra con `_onUpgrade` hasta la version 9.
+**13 tablas con multi-tenancy** (todas las tablas de datos tienen `club_id`):
 
-**Archivo:** `lib/services/database_service.dart`
-
-```dart
-class DatabaseService {
-  static final DatabaseService _instance = DatabaseService._internal();
-  factory DatabaseService() => _instance;
-
-  Database? _database;
-
-  Future<Database> get database async {
-    _database ??= await _initDB();
-    return _database!;
-  }
-
-  Future<Database> _initDB() async {
-    final path = join(await getDatabasesPath(), 'gmu_doulos.db');
-    return openDatabase(path, version: 9,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
-  }
-}
+#### `clubes` (NEW v2)
+```sql
+CREATE TABLE clubes (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  iglesia TEXT NOT NULL,
+  ciudad TEXT NOT NULL,
+  pais TEXT DEFAULT 'México',
+  asociacion TEXT,
+  union_campo TEXT,
+  division TEXT DEFAULT 'División Interamericana',
+  codigo_acceso TEXT UNIQUE NOT NULL,
+  ministerios TEXT DEFAULT 'gm',  -- 'gm' | 'conq' | 'av' | 'gm,conq' | etc.
+  plan TEXT DEFAULT 'gratis',     -- 'gratis' | 'pro'
+  max_miembros INTEGER DEFAULT 20,
+  plan_expira TIMESTAMP,
+  activo INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX idx_clubes_codigo ON clubes(codigo_acceso);
 ```
 
-### Base de Datos en la Nube (PostgreSQL / Neon)
-
-La conexion se establece mediante `@neondatabase/serverless` usando la variable de entorno `POSTGRES_URL`.
-
-**Archivo:** `backend/api/_db.js`
-
-```javascript
-const { neon } = require('@neondatabase/serverless');
-
-function getDb() {
-  const connectionString = process.env.POSTGRES_URL
-    || process.env.POSTGRES_DATABASE_URL
-    || process.env.DATABASE_URL;
-  return neon(connectionString);
-}
+#### `miembros`
+```sql
+CREATE TABLE miembros (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  apellido TEXT NOT NULL,
+  fecha_nacimiento TEXT,
+  telefono TEXT,
+  email TEXT,
+  foto_url TEXT,
+  clase TEXT DEFAULT 'Guia Mayor Aspirante',
+  rol TEXT DEFAULT 'Miembro',
+  activo INTEGER DEFAULT 1,
+  fecha_registro TEXT NOT NULL,
+  usuario TEXT,
+  password_hash TEXT,             -- bcrypt
+  club_id TEXT,                   -- NEW v2
+  ministerio TEXT DEFAULT 'gm',   -- NEW v2
+  clase_ministerio TEXT,          -- NEW v2 (clase del Conq/Av)
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-### Esquema Completo
+#### `eventos`
+```sql
+CREATE TABLE eventos (
+  id TEXT PRIMARY KEY,
+  titulo TEXT NOT NULL,
+  descripcion TEXT,
+  fecha TEXT NOT NULL,
+  hora TEXT,
+  ubicacion TEXT,
+  tipo TEXT DEFAULT 'reunion',
+  latitud DOUBLE PRECISION,
+  longitud DOUBLE PRECISION,
+  club_id TEXT,                   -- NEW v2
+  ministerio TEXT DEFAULT 'todos' -- NEW v2
+);
+```
 
-El esquema se encuentra en `backend/schema.sql` y se ejecuta al llamar `POST /api/setup`. Las tablas usan `TEXT` para todos los campos de texto (no VARCHAR) para evitar problemas de longitud.
+#### `unidades`
+```sql
+CREATE TABLE unidades (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  activo INTEGER DEFAULT 1,
+  fecha_creacion TEXT NOT NULL,
+  club_id TEXT,                   -- NEW v2
+  ministerio TEXT DEFAULT 'gm'    -- NEW v2
+);
+```
 
-Las tablas principales son: miembros, eventos, unidades, unidad_miembros, asistencia, especialidades, miembro_especialidad, carpeta_secciones, carpeta_requisitos, carpeta_progreso, audit_log, configuracion.
+#### `unidad_miembros`
+```sql
+CREATE TABLE unidad_miembros (
+  id TEXT PRIMARY KEY,
+  unidad_id TEXT NOT NULL,
+  miembro_id TEXT NOT NULL,
+  rol_en_unidad TEXT DEFAULT 'miembro',
+  fecha_asignacion TEXT NOT NULL
+);
+```
 
-Indices creados para optimizacion:
-- `idx_asistencia_fecha` en asistencia(fecha)
-- `idx_asistencia_miembro` en asistencia(miembro_id)
-- `idx_asistencia_unidad` en asistencia(unidad_id)
-- `idx_audit_log_fecha` en audit_log(fecha)
-- `idx_carpeta_progreso_miembro` en carpeta_progreso(miembro_id)
-- `idx_miembros_rol` en miembros(rol)
-- `idx_miembros_activo` en miembros(activo)
+#### `asistencia`
+```sql
+CREATE TABLE asistencia (
+  id TEXT PRIMARY KEY,
+  unidad_id TEXT NOT NULL,
+  miembro_id TEXT NOT NULL,
+  fecha TEXT NOT NULL,
+  dia_semana TEXT,
+  puntualidad TEXT DEFAULT '0',
+  panoleta TEXT DEFAULT '0',
+  biblia TEXT DEFAULT '0',
+  cuota TEXT DEFAULT '0',
+  registrado_por TEXT,
+  fecha_registro TEXT,
+  club_id TEXT                    -- NEW v2
+);
+```
+
+#### `carpeta_secciones`, `carpeta_requisitos`, `carpeta_progreso`
+Tablas para la Carpeta de Investidura, todas con `club_id`.
+
+#### `especialidades`, `miembro_especialidad`
+Para el catalogo de especialidades JA, todas con `club_id`.
+
+#### `audit_log`
+```sql
+CREATE TABLE audit_log (
+  id TEXT PRIMARY KEY,
+  accion TEXT NOT NULL,
+  tabla TEXT,
+  registro_id TEXT,
+  descripcion TEXT,
+  usuario_id TEXT,
+  usuario_nombre TEXT,
+  fecha TEXT NOT NULL
+);
+```
+
+### Esquema SQLite (local)
+
+Es una copia del esquema PostgreSQL pero usando tipos SQLite (`TEXT`, `INTEGER`, `REAL`).
+
+**Version actual:** `10` (definida en `database_service.dart`)
+
+**Migraciones automaticas:** El metodo `_onUpgrade` de `database_service.dart` aplica los cambios incrementales:
+- v6: agrega tabla `unidades`, `carpeta_*`
+- v7: agrega columnas de estado a `carpeta_progreso`
+- v8: refactor de `asistencia` (de evento-based a unidad+fecha)
+- v9: agrega `audit_log`
+- v10: agrega tabla `clubes` y columnas `club_id`/`ministerio`/`clase_ministerio`
 
 ---
 
-## 5. API REST
+## Backend REST API
 
-### Arquitectura del Backend
+### URL base
 
-El backend usa **Vercel Serverless Functions**. Cada archivo en `backend/api/` se convierte automaticamente en un endpoint. El directorio raiz del proyecto en Vercel esta configurado como `backend`.
-
-### Middleware de Autenticacion
-
-**Archivo:** `backend/api/_auth.js`
-
-Todos los endpoints (excepto `/api/health`) requieren el header `X-API-Key` con el valor configurado en la variable de entorno `API_KEY`.
-
-```javascript
-function validateAuth(req, res) {
-  // CORS preflight
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
-    res.status(200).end();
-    return false; // indica que ya se respondio
-  }
-
-  res.setHeader('Access-Control-Allow-Origin', '*');
-
-  const apiKey = req.headers['x-api-key'];
-  if (apiKey !== process.env.API_KEY) {
-    res.status(401).json({ error: 'No autorizado. API key invalida.' });
-    return false;
-  }
-  return true; // autenticacion exitosa
-}
+```
+https://gmu-doulos.vercel.app/api
 ```
 
-### Endpoints Detallados
+### Autenticacion
 
-#### GET /api/health
-No requiere autenticacion. Retorna el estado del servidor y la conexion a base de datos.
+Todas las rutas (excepto `/api/auth`, `/api/health`, y la verificacion de codigo en `/api/clubes?codigo=X`) requieren el header:
 
-#### POST /api/setup
-Crea todas las tablas e indices. Usa `IF NOT EXISTS` para ser idempotente. Se ejecuta una vez al inicializar el proyecto.
-
-#### POST /api/auth
-Autentica un usuario verificando usuario y password_hash contra la tabla miembros.
-
-```javascript
-// Request
-{ "usuario": "admin", "password_hash": "sha256hash..." }
-
-// Response (exito)
-{ "ok": true, "miembro": { id, nombre, apellido, rol, clase, ... } }
-
-// Response (error)
-{ "ok": false, "error": "Credenciales invalidas" }
+```
+X-API-Key: gmu-doulos-2025-secret
 ```
 
-#### GET/POST/DELETE /api/miembros
+Operaciones de super-administrador (crear club nuevo) requieren:
 
-- **GET:** Lista miembros. Soporta filtros `?rol=Director`, `?activo=1`, `?id=uuid`
-- **POST:** Crea o actualiza miembro (upsert con ON CONFLICT)
-- **DELETE:** Elimina miembro por `?id=uuid`
-
-#### GET/POST/DELETE /api/eventos
-
-- **GET:** Lista eventos ordenados por fecha. Filtro `?tipo=reunion`
-- **POST:** Crea o actualiza evento
-- **DELETE:** Elimina evento por ID
-
-#### GET/POST/DELETE /api/unidades
-
-- **GET:** Lista unidades con sus miembros (JOIN con unidad_miembros y miembros)
-- **POST:** Crea o actualiza unidad
-- **DELETE:** Elimina unidad (CASCADE elimina asignaciones)
-
-#### GET/POST /api/asistencia
-
-- **GET:** Lista asistencia con JOIN a miembros. Filtros: `?unidad_id`, `?miembro_id`, `?fecha`
-- **POST:** Registra asistencia. Soporta batch (array de registros)
-
-#### POST /api/sync
-Endpoint de sincronizacion masiva. Recibe arrays de todas las entidades y ejecuta upserts.
-
-```javascript
-// Request
-{
-  "miembros": [...],
-  "eventos": [...],
-  "unidades": [...],
-  "unidad_miembros": [...],
-  "asistencia": [...]
-}
-
-// Response
-{
-  "ok": true,
-  "counts": { "miembros": 12, "eventos": 5, ... }
-}
 ```
+X-SuperAdmin-Key: gmu-superadmin-2026
+```
+
+### Endpoints (12 funciones serverless)
+
+| Endpoint | Metodos | Descripcion |
+|----------|---------|-------------|
+| `/api/health` | GET | Health check + lista de endpoints |
+| `/api/setup` | POST | Inicializa/recrea tablas |
+| `/api/auth` | POST | Login (bcrypt + migra SHA-256 legacy) |
+| `/api/miembros` | GET, POST, PUT, DELETE | CRUD miembros (filtra por club_id) |
+| `/api/eventos` | GET, POST, PUT, DELETE | CRUD eventos |
+| `/api/unidades` | GET, POST, PUT, DELETE | CRUD unidades + sus miembros |
+| `/api/asistencia` | GET, POST, PUT, DELETE | CRUD asistencia |
+| `/api/sync` | GET, POST | Sincronizacion masiva por club_id |
+| `/api/clubes` | GET, POST, PUT | Multi-flujo: codigo, onboarding, unirse, aprobar, reset password |
+| `/api/send-notification` | POST | FCM server-side |
+
+### Detalle de `/api/clubes` (endpoint multi-funcional)
+
+Por el limite de 12 funciones del plan Hobby de Vercel, este endpoint maneja varias acciones segun el `action` en el body:
+
+#### GET `/api/clubes?codigo=DOULOS2026`
+Verifica codigo de acceso (sin auth). Retorna datos del club.
+
+#### GET `/api/clubes?id=doulos-montemorelos` (con auth)
+Obtiene datos completos del club.
+
+#### GET `/api/clubes?pendientes=1&club_id=X&ministerio=Y` (con auth)
+Lista solicitudes de unirse pendientes (activo=0).
+
+#### POST `/api/clubes` con `action: "onboarding"`
+Registra Director nuevo con codigo de acceso. Copia plantilla DIA al club.
+
+#### POST `/api/clubes` con `action: "unirse"`
+Registra solicitud de miembro/consejero (queda activo=0).
+
+#### POST `/api/clubes` con `action: "aprobar"` o `"rechazar"`
+Director aprueba/rechaza solicitud pendiente.
+
+#### POST `/api/clubes` con `action: "reset_password"`
+Director resetea contraseña de un miembro de su club.
+
+#### POST `/api/clubes` (sin action, requiere SuperAdmin key)
+Crea un club nuevo (solo super-admin).
+
+### Codigos de respuesta
+
+| Codigo | Significado |
+|--------|-------------|
+| 200 | OK |
+| 201 | Recurso creado |
+| 400 | Faltan campos requeridos |
+| 401 | API key invalida |
+| 403 | Sin permisos (no es Director, etc.) |
+| 404 | Recurso no encontrado |
+| 405 | Metodo HTTP no permitido |
+| 409 | Conflicto (usuario duplicado, ya hay Director, etc.) |
+| 429 | Rate limit excedido (30 req/min) |
+| 500 | Error interno del servidor |
 
 ---
 
-## 6. Servicios de la Aplicacion
+## Servicios Flutter
 
-### AuthService (Singleton)
-
-**Archivo:** `lib/services/auth_service.dart`
-
-Gestiona la autenticacion, sesion activa y permisos del usuario.
+Todos los servicios usan **patron Singleton**:
 
 ```dart
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
-
-  Map<String, dynamic>? _currentUser;
-  bool get isLoggedIn => _currentUser != null;
-  String get rol => _currentUser?['rol'] ?? '';
-  bool get isAdmin => rol == 'Director' || rol == 'Director Asociado';
-  bool get isConsejero => rol == 'Consejero';
-}
-```
-
-Funcionalidades:
-- Login con verificacion de hash SHA-256
-- Persistencia de sesion en configuracion local
-- Restauracion automatica de sesion al abrir la app
-- Suscripcion a topics de FCM segun rol
-- Logout con limpieza de sesion
-
-### DatabaseService (Singleton)
-
-**Archivo:** `lib/services/database_service.dart`
-
-Maneja todas las operaciones CRUD contra SQLite local. Contiene metodos para cada tabla:
-
-- Miembros: `getMiembros()`, `insertMiembro()`, `updateMiembro()`, `deleteMiembro()`
-- Eventos: `getEventos()`, `insertEvento()`, `updateEvento()`, `deleteEvento()`
-- Unidades: `getUnidades()`, `insertUnidad()`, `getUnidadMiembros()`
-- Asistencia: `getAsistencia()`, `registrarAsistencia()`, `getHistorialAsistencia()`
-- Carpeta: `getCarpetaSecciones()`, `getCarpetaRequisitos()`, `getCarpetaProgreso()`
-- Configuracion: `getConfig()`, `setConfig()`
-- Audit: `insertAuditLog()`, `getAuditLogs()`
-
-### ApiService (Singleton)
-
-**Archivo:** `lib/services/api_service.dart`
-
-Cliente HTTP para comunicacion con el backend REST.
-
-```dart
-class ApiService {
-  static final ApiService _instance = ApiService._internal();
-  factory ApiService() => _instance;
-
-  static const String _baseUrl = 'https://gmu-doulos.vercel.app/api';
-
-  Future<Map<String, String>> get _headers async => {
-    'Content-Type': 'application/json',
-    'X-API-Key': await _getApiKey(),
-  };
-
-  Future<dynamic> get(String endpoint) async { ... }
-  Future<dynamic> post(String endpoint, Map<String, dynamic> body) async { ... }
-  Future<dynamic> delete(String endpoint) async { ... }
-}
-```
-
-### SyncManager (Singleton)
-
-**Archivo:** `lib/services/sync_manager.dart`
-
-Implementa la sincronizacion offline-first con debounce.
-
-```dart
-class SyncManager {
-  static final SyncManager _instance = SyncManager._internal();
-  factory SyncManager() => _instance;
-
-  Timer? _debounceTimer;
-  bool _isSyncing = false;
-
-  void notifyChange() {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(seconds: 3), () {
-      _uploadToServer();
-    });
-  }
-
-  Future<void> _uploadToServer() async {
-    if (_isSyncing) return;
-    _isSyncing = true;
-    try {
-      // Recopilar datos locales
-      // Enviar a /api/sync
-      // Actualizar timestamp de ultima sincronizacion
-    } finally {
-      _isSyncing = false;
-    }
-  }
-}
-```
-
-### NotificationService
-
-**Archivo:** `lib/services/notification_service.dart`
-
-Gestiona Firebase Cloud Messaging y notificaciones locales.
-
-- Inicializacion de FCM con solicitud de permisos
-- Suscripcion a topics segun rol (todos, admin, consejero, aspirante)
-- Manejo de notificaciones en foreground con flutter_local_notifications
-- Handler de notificaciones en background
-
-### PDFService
-
-**Archivo:** `lib/services/pdf_service.dart`
-
-Genera documentos PDF con la libreria `pdf`.
-
-Metodos:
-- `generarReporteMiembros()` - Lista de todos los miembros activos
-- `generarReporteAsistencia()` - Resumen de asistencia por unidad y fecha
-- `generarReporteCarpeta(String miembroId)` - Progreso individual de carpeta de investidura
-
----
-
-## 7. Sistema de Autenticacion
-
-### Flujo de Login
-
-```
-Usuario ingresa credenciales
-        │
-        ▼
-  Hash SHA-256 del password
-        │
-        ▼
-  Buscar en SQLite local por usuario + hash
-        │
-        ├── Encontrado → Crear sesion, guardar en config
-        │
-        └── No encontrado → Incrementar intentos fallidos
-                │
-                ├── < 5 intentos → Mostrar error
-                └── >= 5 intentos → Bloquear 30 segundos
-```
-
-### Hashing de Contrasenas
-
-```dart
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
-
-String hashPassword(String password) {
-  final bytes = utf8.encode(password);
-  final digest = sha256.convert(bytes);
-  return digest.toString();
-}
-```
-
-### Persistencia de Sesion
-
-La sesion se persiste en la tabla `configuracion` con la clave `current_user_id`. Al abrir la app, se intenta restaurar la sesion:
-
-```dart
-Future<bool> restoreSession() async {
-  final userId = await _db.getConfig('current_user_id');
-  if (userId != null) {
-    final miembro = await _db.getMiembro(userId);
-    if (miembro != null) {
-      _currentUser = miembro;
-      return true;
-    }
-  }
-  return false;
-}
-```
-
----
-
-## 8. Sincronizacion Offline-First
-
-### Principio de Funcionamiento
-
-1. **Escritura local primero:** Toda operacion de escritura se ejecuta inmediatamente en SQLite
-2. **Notificacion de cambio:** Despues de cada escritura, se llama `SyncManager().notifyChange()`
-3. **Debounce:** El SyncManager espera 3 segundos sin nuevos cambios antes de sincronizar
-4. **Upload:** Recopila todos los datos locales y los envia a `POST /api/sync`
-5. **Download al inicio:** Al abrir la app, descarga datos del servidor
-
-### Resolucion de Conflictos
-
-Se usa la estrategia **Last Write Wins** implementada con `ON CONFLICT ... DO UPDATE` en PostgreSQL:
-
-```sql
-INSERT INTO miembros (id, nombre, apellido, ...)
-VALUES ($1, $2, $3, ...)
-ON CONFLICT (id) DO UPDATE SET
-  nombre = EXCLUDED.nombre,
-  apellido = EXCLUDED.apellido,
+  AuthService._internal();
   ...
-  updated_at = NOW();
-```
-
-### Integracion con DatabaseService
-
-El DatabaseService llama a `SyncManager().notifyChange()` despues de cada operacion de escritura:
-
-```dart
-Future<void> insertMiembro(Map<String, dynamic> miembro) async {
-  final db = await database;
-  await db.insert('miembros', miembro,
-    conflictAlgorithm: ConflictAlgorithm.replace);
-  SyncManager().notifyChange(); // Trigger auto-sync
 }
 ```
+
+### `AuthService`
+- `login(usuario, password)` → autentica con bcrypt local
+- `logout()` → limpia sesion
+- `tryRestoreSession()` → restaura usuario al abrir app
+- `setClub(Club)` → asigna club al usuario
+- `currentUser`, `currentClub`, `clubId` → estado actual
+- Getters de rol: `isDirectorGM`, `isDirectorConq`, `isDirectorAv`, `isAdmin`, `isConsejero`, `isAspirante`, `isCoordinador`
+- `ministerioActivo` → mapea rol a ministerio (gm/conq/av/todos)
+- `isPlanPro`, `isAtMemberLimit` → validacion de plan
+
+### `DatabaseService`
+- `database` → instancia singleton de Database (sqflite)
+- CRUD methods: `getMiembros()`, `insertMiembro()`, `updateMiembro()`, etc.
+- `setConfig(clave, valor)` / `getConfig(clave)` → key-value local
+- `getClub(id)` / `insertClub(map)` → multi-tenant
+- `resetDatabase()` → borra todo y reinserta seed
+- `_onCreate` y `_onUpgrade` → maneja schema y migraciones
+
+### `ApiService`
+- Cliente HTTP REST completo
+- Todos los metodos retornan `Future<...>`
+- Manejo de UTF-8: usa `utf8.decode(response.bodyBytes)` para tildes
+- Excepciones: `ApiException(statusCode, message)`
+- Configuracion via `--dart-define`:
+  ```
+  flutter build apk --dart-define=API_URL=https://mi-backend.com/api
+  ```
+
+### `SyncManager`
+- `init()` → descarga datos del servidor al abrir app
+- `syncEnBackground()` → debounce 3s + upload
+- `subirAhora()` → forzar upload inmediato
+- `descargarDatos()` → trae todo del servidor
+- Stream `syncStream` → estados (syncing, success, error)
+
+### `NotificationService`
+- Firebase Cloud Messaging + notificaciones locales
+- Topics: `todos`, `admin`, `consejero`, `aspirante`
+- Background handler en `main.dart`
+
+### `PdfService`
+- 3 tipos de reportes: lista, asistencia, carpeta individual
+- Usa el paquete `pdf` con `pw.MultiPage`
+- Comparte via `share_plus` o abre con `open_filex`
 
 ---
 
-## 9. Notificaciones Push
+## Seguridad
 
-### Configuracion de Firebase
+### Autenticacion
 
-El proyecto usa Firebase Cloud Messaging (FCM) configurado en:
-- `android/app/google-services.json` (Android)
-- `ios/Runner/GoogleService-Info.plist` (iOS)
+- **bcrypt** con salt rounds = 10 (en backend)
+- **SHA-256 legacy:** El backend detecta hashes viejos (64 chars hex), los valida con SHA-256 + salt, y los **migra automaticamente a bcrypt** en el proximo login
+- **Rate limiting:** 10 intentos de login por IP por minuto
+- **API key:** todas las rutas (excepto auth/health/codigo) requieren header `X-API-Key`
+- **Super admin key:** crear clubes nuevos requiere `X-SuperAdmin-Key`
 
-### Inicializacion
+### Validacion
 
-```dart
-class NotificationService {
-  Future<void> init() async {
-    // Solicitar permisos
-    await FirebaseMessaging.instance.requestPermission();
+- Backend valida campos requeridos en cada endpoint
+- Frontend valida formatos antes de enviar
+- Sanitizacion de inputs en pantallas de auth
 
-    // Obtener token FCM
-    final token = await FirebaseMessaging.instance.getToken();
+### Multi-tenancy aislado
 
-    // Configurar handler de foreground
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+- Todas las queries del backend filtran por `club_id`
+- Un Director del club A no puede ver datos del club B
+- En la app, el `AuthService.clubId` determina que datos cargar
 
-    // Configurar handler de background
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+### HTTPS
 
-    // Inicializar notificaciones locales
-    await _initLocalNotifications();
-  }
-}
-```
+- Vercel sirve todo por HTTPS con HSTS
+- ProGuard activo en release build
 
-### Topics
+### Permisos minimos
 
-Los usuarios se suscriben a topics segun su rol:
-- `todos` - Todos los usuarios
-- `admin` - Solo directores
-- `consejero` - Solo consejeros
-- `aspirante` - Solo aspirantes
+- Solo `INTERNET`, `CAMERA`, `POST_NOTIFICATIONS`, `READ_MEDIA_IMAGES`
 
 ---
 
-## 10. Generacion de Reportes PDF
+## Sincronizacion
 
-### Arquitectura
+### Estrategia offline-first
 
-El `PDFService` usa la libreria `pdf` para generar documentos `pw.Document` con `pw.MultiPage`, lo que permite contenido que se extiende a multiples paginas automaticamente.
+1. **Escritura:** se guarda en SQLite local **inmediatamente**
+2. **Notificacion:** SyncManager registra el cambio
+3. **Debounce:** espera 3 segundos antes de enviar (agrupa cambios)
+4. **Upload:** `POST /api/sync` con todos los datos del club
+5. **Backend:** UPSERT en PostgreSQL con `ON CONFLICT (id) DO UPDATE`
+6. **Lectura:** al abrir la app, `SyncManager.init()` descarga del servidor
 
-### Flujo de Generacion
+### Manejo de conflictos
 
-```
-1. Obtener datos de DatabaseService
-2. Construir documento pw.Document
-3. Agregar paginas con pw.MultiPage
-4. Guardar archivo en directorio temporal
-5. Abrir con open_filex o compartir con share_plus
-```
+- Estrategia: **last-write-wins** basada en `updated_at`
+- IDs son UUIDs/timestamps generados en el cliente, evitando colisiones
+- El servidor sobrescribe sin merge (simple y rapido)
 
-### Ejemplo: Reporte de Carpeta Individual
+### Reconciliacion
 
-```dart
-Future<File> generarReporteCarpeta(String miembroId) async {
-  final miembro = await _db.getMiembro(miembroId);
-  final secciones = await _db.getCarpetaSecciones();
-  final progreso = await _db.getCarpetaProgresoMiembro(miembroId);
-
-  // Pre-cargar requisitos por seccion
-  final requisitosPorSeccion = <String, List<Map<String, dynamic>>>{};
-  for (final seccion in secciones) {
-    requisitosPorSeccion[seccion['id']] =
-      await _db.getCarpetaRequisitos(seccion['id']);
-  }
-
-  final pdf = pw.Document();
-  pdf.addPage(pw.MultiPage(
-    build: (context) => [
-      // Header con info del miembro
-      // Resumen de progreso por seccion
-      // Tabla de requisitos con estado
-    ],
-  ));
-
-  // Guardar y retornar archivo
-  final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/carpeta_${miembro['nombre']}.pdf');
-  await file.writeAsBytes(await pdf.save());
-  return file;
-}
-```
+- Si el cliente esta offline mucho tiempo: al reconectarse hace upload completo
+- El servidor responde con sus datos, el cliente reemplaza local
 
 ---
 
-## 11. Sistema de Roles y Permisos
+## Multi-tenancy
 
-### Definicion de Roles
+### Modelo conceptual
 
-```dart
-// En models/miembro.dart
-class ClasesGuiasMayores {
-  static const List<String> roles = [
-    'Miembro',
-    'Consejero',
-    'Instructor',
-    'Director',
-    'Director Asociado',
-    'Secretario',
-    'Tesorero',
-  ];
-}
+```
+DIA (Division Interamericana)
++-- Club Doulos (Montemorelos)
+|   +-- Ministerio: GM
+|       +-- Director Roberto
+|       +-- 12 Aspirantes
+|       +-- 3 Unidades
+|
++-- Club Leones de Juda (Monterrey)
+|   +-- Ministerio: GM
+|   |   +-- Director ...
+|   +-- Ministerio: Conquistadores
+|       +-- Director ...
+|
++-- Club Centinelas (Guadalajara)
+    +-- 3 ministerios
 ```
 
-### Control de Acceso en la Navegacion
+### Identificadores
 
-```dart
-// En main.dart - _buildScreens()
-List<Widget> _buildScreens() {
-  final auth = AuthService();
-  if (auth.isAdmin) {
-    return [HomeScreen(), MiembrosScreen(), CalendarioScreen(), AdminPanelScreen()];
-  } else if (auth.isConsejero) {
-    return [HomeScreen(), ConsejeroUnidadScreen(), CalendarioScreen(), ManualScreen()];
-  } else {
-    return [HomeScreen(), CarpetaScreen(), CalendarioScreen(), ManualScreen()];
-  }
-}
-```
+- `club_id`: TEXT (slug del club, ej: `doulos-montemorelos`)
+- `codigo_acceso`: TEXT UNIQUE (ej: `DOULOS2026`)
+- `ministerio`: TEXT (`gm` | `conq` | `av` | `todos`)
+- `clase_ministerio`: TEXT (clase del Conq/Av: `Amigo`, `Compañero`, etc.)
 
-### Control de Acceso en el Menu
+### Crear un club nuevo
 
-El Drawer muestra opciones diferentes segun el rol:
-
-- **Director:** Miembros, Asistencia, Unidades, Carpeta (gestionar + aprobar), Especialidades, Reportes, Estadisticas
-- **Consejero:** Mi Unidad, Carpeta (revisar), Especialidades
-- **Aspirante:** Mi Carpeta, Manual
-
----
-
-## 12. Tema y Diseno
-
-### Paleta de Colores
-
-```dart
-class AppTheme {
-  static const Color primaryGreen = Color(0xFF2E7D32);
-  static const Color darkGreen = Color(0xFF1B5E20);
-  static const Color accentGold = Color(0xFFFFC107);
-  static const Color errorRed = Color(0xFFD32F2F);
-  static const Color successGreen = Color(0xFF388E3C);
-  static const Color warningOrange = Color(0xFFF57C00);
-  static const Color infoBlue = Color(0xFF1976D2);
-}
-```
-
-### Tipografia
-
-La aplicacion usa Google Fonts Poppins como tipografia principal:
-
-```dart
-static TextTheme get _textTheme => GoogleFonts.poppinsTextTheme();
-```
-
-### Espaciado y Bordes
-
-```dart
-// Spacing
-static const double spacingXS = 4;
-static const double spacingSM = 8;
-static const double spacingMD = 16;
-static const double spacingLG = 24;
-static const double spacingXL = 32;
-
-// Border Radius
-static const double radiusSM = 8;
-static const double radiusMD = 12;
-static const double radiusLG = 16;
-static const double radiusXL = 20;
-```
-
-### Dark Mode
-
-El modo oscuro se implementa con dos ThemeData completos y se persiste en la tabla `configuracion`:
-
-```dart
-// En main.dart
-ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
-
-MaterialApp(
-  theme: AppTheme.lightTheme,
-  darkTheme: AppTheme.darkTheme,
-  themeMode: themeNotifier.value,
-);
-```
-
----
-
-## 13. Compilacion y Despliegue
-
-### Compilar APK de Release
+Solo el super-administrador puede crear clubes via API:
 
 ```bash
-# Generar APK firmado
+curl -X POST https://gmu-doulos.vercel.app/api/clubes \
+  -H "Content-Type: application/json" \
+  -H "X-SuperAdmin-Key: gmu-superadmin-2026" \
+  -d '{
+    "id": "leones-monterrey",
+    "nombre": "Leones de Juda",
+    "iglesia": "Iglesia Adventista del Valle",
+    "ciudad": "Monterrey, NL",
+    "codigo_acceso": "LEONES2026",
+    "ministerios": "gm,conq",
+    "max_miembros": 30
+  }'
+```
+
+### Plantillas DIA
+
+Cuando se crea un club via onboarding, el backend **copia automaticamente** la plantilla DIA correspondiente:
+
+- `DIA_TEMPLATE_GM` → 8 secciones, 40+ requisitos oficiales
+- `DIA_TEMPLATE_CONQ` → 6 clases con 6 requisitos cada una
+- `DIA_TEMPLATE_AV` → 6 clases con 4 requisitos cada una
+
+Las plantillas se cargan corriendo `/api/seed-dia` (solo super-admin) en el setup inicial.
+
+---
+
+## Sistema de roles
+
+### Jerarquia
+
+```
+Coordinador General (lectura de todos los ministerios del club)
+|
++-- Director GM       (CRUD completo del ministerio GM)
+|   +-- Director Asociado GM
+|   +-- Secretario GM / Tesorero GM
+|   +-- Consejero GM (lectura + asistencia + pre-aprobar carpeta)
+|       +-- Aspirante GM (solo su carpeta)
+|
++-- Director Conq     (mismo modelo para Conquistadores)
+|   +-- Director Asociado Conq
+|   +-- Secretario Conq
+|   +-- Consejero Conq
+|       +-- Conquistador
+|
++-- Director Aventureros (mismo modelo para Aventureros)
+    +-- Director Asociado Aventureros
+    +-- Consejero Aventureros
+        +-- Aventurero
+```
+
+### Resolucion de permisos
+
+```dart
+final auth = AuthService();
+auth.isAdmin           // true si es algun Director
+auth.isDirectorGM      // true solo si rol contiene "Director GM"
+auth.isConsejero       // true si es Consejero/Secretario de cualquier ministerio
+auth.isAspirante       // true si rol esta en ['Aspirante GM','Conquistador','Aventurero']
+auth.isCoordinador     // true si rol == 'Coordinador General'
+auth.ministerioActivo  // 'gm' | 'conq' | 'av' | 'todos'
+```
+
+### Compatibilidad legacy
+
+Roles antiguos (`Director`, `Consejero`, `Miembro` sin sufijo de ministerio) se mapean automaticamente al ministerio `gm` para no romper datos existentes.
+
+---
+
+## Compilacion
+
+### Requisitos previos
+
+- Flutter SDK 3.x instalado
+- Android Studio con Android SDK 21+
+- Java JDK 17
+- Modo desarrollador habilitado en Windows
+- Cuenta de Vercel + Vercel CLI (`npm i -g vercel`)
+- Cuenta de Firebase con `google-services.json` configurado
+
+### Compilar APK debug
+
+```bash
+flutter clean
+flutter pub get
+flutter run
+```
+
+### Compilar APK release (firmado)
+
+1. Asegurate de tener `android/app/key.properties`:
+
+```properties
+storePassword=tu_password
+keyPassword=tu_password
+keyAlias=upload
+storeFile=gmu_doulos_keystore.jks
+```
+
+2. Compila:
+
+```bash
+flutter clean
+flutter pub get
 flutter build apk --release
-
-# El APK se genera en:
-# build/app/outputs/flutter-apk/app-release.apk
 ```
 
-### Configuracion de Signing
+3. El APK queda en `build/app/outputs/flutter-apk/app-release.apk`
 
-En `android/app/build.gradle.kts`:
-
-```kotlin
-android {
-    signingConfigs {
-        create("release") {
-            storeFile = file("keystore/release.jks")
-            storePassword = "password"
-            keyAlias = "gmu_doulos"
-            keyPassword = "password"
-        }
-    }
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-            signingConfig = signingConfigs.getByName("release")
-        }
-    }
-}
-```
-
-### ProGuard Rules
-
-```proguard
-# Flutter
--keep class io.flutter.** { *; }
-
-# Play Core (required by Flutter)
--dontwarn com.google.android.play.core.**
-
-# Firebase
--keep class com.google.firebase.** { *; }
-
-# Gson
--keep class com.google.gson.** { *; }
-```
-
-### Desplegar Backend
+### Compilar AAB para Play Store
 
 ```bash
-# Desde la raiz del proyecto (no desde backend/)
-cd gmu_doulos
+flutter build appbundle --release
+```
+
+### Deploy del backend
+
+```bash
+cd C:\Users\Dell\Documents\gmu_doulos
 vercel --prod --yes
-
-# Vercel usa Root Directory: backend
-# Los archivos en backend/api/ se convierten en endpoints
-```
-
-### Inicializar Base de Datos
-
-```bash
-# Crear tablas (una sola vez)
-curl -X POST https://gmu-doulos.vercel.app/api/setup \
-  -H "X-API-Key: <tu-api-key>"
 ```
 
 ---
 
-## 14. Variables de Entorno y Configuracion
+## Variables de entorno
 
-### Variables de Vercel
-
-| Variable | Descripcion |
-|----------|-------------|
-| `POSTGRES_URL` | Connection string de PostgreSQL (Neon) |
-| `POSTGRES_DATABASE_URL` | URL alternativa de PostgreSQL |
-| `API_KEY` | Clave de autenticacion para la API |
-| `FIREBASE_SERVICE_ACCOUNT` | Credenciales de Firebase (para notificaciones server-side) |
-
-### Configuracion de la App (app_config.dart)
-
-```dart
-class AppConfig {
-  static const String appName = 'GMU Doulos';
-  static const String clubName = 'Club de Guias Mayores';
-  static const String location = 'Montemorelos, Nuevo Leon';
-  static const String church = 'Iglesia Adventista Central';
-  static const String tagline = 'Siervos de Cristo';
-  static const String version = 'v1.1.0';
-  static const String databaseName = 'gmu_doulos.db';
-  static const String notificationChannelId = 'gmu_doulos_channel';
-}
-```
-
-### Obtener Variables de Entorno Localmente
+### Flutter (compile-time via --dart-define)
 
 ```bash
-# Descargar las variables de Vercel al archivo .env.local
-vercel env pull .env.local
+flutter build apk --release \
+  --dart-define=API_URL=https://gmu-doulos.vercel.app/api \
+  --dart-define=API_KEY=gmu-doulos-2025-secret
+```
+
+### Backend (Vercel env vars)
+
+| Variable | Valor | Descripcion |
+|----------|-------|-------------|
+| `POSTGRES_URL` | (auto-generada por Neon) | Conexion a BD |
+| `POSTGRES_DATABASE_URL` | (auto-generada) | Alternativa |
+| `API_KEY` | `gmu-doulos-2025-secret` | API key publica |
+| `SUPER_ADMIN_KEY` | `gmu-superadmin-2026` | Para crear clubes |
+| `FIREBASE_SERVICE_ACCOUNT` | (JSON serializado) | Para FCM |
+
+### Configurar en Vercel
+
+```bash
+vercel env add API_KEY production --value "gmu-doulos-2025-secret" --yes
+vercel env add SUPER_ADMIN_KEY production --value "gmu-superadmin-2026" --yes
+vercel --prod --yes  # redeploy
 ```
 
 ---
 
-## 15. Mantenimiento y Troubleshooting
+## Testing
 
-### Logs del Backend
+### Pruebas manuales
+
+1. **Flujo de Director nuevo:**
+   - Borrar datos de la app → Onboarding → "Soy Director" → codigo `DOULOS2026`
+2. **Flujo de miembro:**
+   - "Unirme" → codigo del club → datos → "Solicitud enviada"
+   - Login como Director → "Solicitudes Pendientes" → Aprobar
+3. **Sincronizacion:**
+   - Modo avion ON → crear miembro → modo avion OFF → verificar que sube
+4. **Reset password:**
+   - Login con cuenta SHA-256 viejo → debe migrarse a bcrypt automaticamente
+
+### Verificar backend
 
 ```bash
-# Ver logs de funciones en tiempo real
-vercel logs gmu-doulos.vercel.app
-
-# Health check
 curl https://gmu-doulos.vercel.app/api/health
 ```
 
-### Problemas Comunes
-
-#### Error: FUNCTION_INVOCATION_FAILED
-- Verificar las variables de entorno en Vercel (especialmente POSTGRES_URL)
-- Revisar los logs con `vercel logs`
-- Re-desplegar con `vercel --prod --yes`
-
-#### Error: Cannot find module
-- Los archivos compartidos (_db.js, _auth.js) deben estar en `backend/api/` (no en `backend/lib/`)
-- El Root Directory en Vercel debe ser `backend`
-
-#### Error: value too long for character varying
-- Los campos VARCHAR tienen limite. El schema actual usa TEXT para evitar esto
-- Si persiste, ejecutar `POST /api/setup` para recrear las tablas
-
-#### La sincronizacion falla silenciosamente
-- Verificar conexion: `GET /api/health`
-- Verificar API key: debe coincidir con la variable `API_KEY` en Vercel
-- Revisar la consola de Flutter para errores HTTP
-
-#### El APK no compila (R8/ProGuard)
-- Verificar que `proguard-rules.pro` contenga las reglas para Play Core
-- Limpiar build: `flutter clean && flutter pub get`
-- Recompilar: `flutter build apk --release`
-
-### Actualizar Dependencias
+### Logs en Vercel
 
 ```bash
-# Ver dependencias desactualizadas
-flutter pub outdated
-
-# Actualizar dependencias
-flutter pub upgrade
-
-# Backend
-cd backend && npm update
+vercel logs gmu-doulos.vercel.app
 ```
 
-### Respaldar la Base de Datos
+### Logs de Flutter
 
-Desde la app: Ajustes > Respaldo de datos > Crear respaldo
-
-Desde la terminal:
 ```bash
-# Descargar todos los datos del servidor
-curl https://gmu-doulos.vercel.app/api/miembros -H "X-API-Key: <key>" > miembros.json
-curl https://gmu-doulos.vercel.app/api/eventos -H "X-API-Key: <key>" > eventos.json
+flutter logs
 ```
 
 ---
 
-*Manual Tecnico GMU Doulos v1.1.0*
-*Ultima actualizacion: Marzo 2026*
+## Mantenimiento
+
+### Tareas comunes
+
+#### Crear un nuevo club
+
+```bash
+curl -X POST https://gmu-doulos.vercel.app/api/clubes \
+  -H "Content-Type: application/json" \
+  -H "X-SuperAdmin-Key: gmu-superadmin-2026" \
+  -d '{...}'
+```
+
+#### Resetear las tablas
+
+```bash
+curl -X POST https://gmu-doulos.vercel.app/api/setup \
+  -H "X-API-Key: gmu-doulos-2025-secret"
+```
+
+> ATENCION: borra todos los datos.
+
+#### Actualizar la app en produccion
+
+1. Hacer cambios en codigo
+2. `git commit && git push`
+3. **Backend:** auto-deploy con cada push (o `vercel --prod --yes` manualmente)
+4. **App:** generar APK release y distribuir
+
+#### Agregar una nueva tabla
+
+1. Modificar `_db.js` (backend) - agregar `CREATE TABLE`
+2. Modificar `database_service.dart` (Flutter):
+   - Agregar a `_onCreate`
+   - Incrementar version + agregar bloque en `_onUpgrade`
+3. Crear endpoint en `backend/api/`
+4. Agregar metodo en `ApiService`
+5. Agregar metodo en `SyncManager` si participa en sync
+
+---
+
+## Notas finales
+
+- **Codigo Open Source** en https://github.com/PabloIAIN/gmu_doulos
+- **Licencia:** MIT
+- **Contribuciones:** PRs son bienvenidas
+- **Reportar bugs:** GitHub Issues
+
+**Version del manual:** 2.0
+**Ultima actualizacion:** 2026
+**Mantenedor:** Pablo Garza

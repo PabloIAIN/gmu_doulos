@@ -1,710 +1,421 @@
-# GMU Doulos: Sistema de Gestion para Club de Guias Mayores
+# GMU Doulos v2.0 - Documentacion del Proyecto
 
-## Documentacion del Proyecto
+## Plataforma Multi-Tenant para Gestion de Clubes de Ministerios Juveniles Adventistas
 
 **Materia:** Programacion para Dispositivos Moviles
-**Universidad de Montemorelos**
-**Fecha:** Marzo 2026
-**Version:** 1.1.0
+**Universidad:** Universidad de Montemorelos
+**Estudiante:** Pablo Garza
+**Periodo:** 2026
 
 ---
 
-## Tabla de Contenidos
+## 1. Resumen ejecutivo
 
-1. [Resumen Ejecutivo](#1-resumen-ejecutivo)
-2. [Planteamiento del Problema](#2-planteamiento-del-problema)
-3. [Objetivo General](#3-objetivo-general)
-4. [Objetivos Especificos](#4-objetivos-especificos)
-5. [Justificacion](#5-justificacion)
-6. [Alcance del Proyecto](#6-alcance-del-proyecto)
-7. [Tecnologias Utilizadas](#7-tecnologias-utilizadas)
-8. [Arquitectura del Sistema](#8-arquitectura-del-sistema)
-9. [Modelo de Datos](#9-modelo-de-datos)
-10. [Funcionalidades Implementadas](#10-funcionalidades-implementadas)
-11. [Pantallas de la Aplicacion](#11-pantallas-de-la-aplicacion)
-12. [API REST](#12-api-rest)
-13. [Pruebas Realizadas](#13-pruebas-realizadas)
-14. [Resultados](#14-resultados)
-15. [Conclusiones](#15-conclusiones)
-16. [Trabajo Futuro](#16-trabajo-futuro)
+GMU Doulos es una plataforma movil **multi-tenant** que permite a los clubes de ministerios juveniles de la Iglesia Adventista del Septimo Dia (Division Interamericana) digitalizar la gestion de sus actividades. Soporta los tres ministerios oficiales: **Guias Mayores, Conquistadores y Aventureros**.
+
+El sistema esta compuesto por:
+- **App movil Android** desarrollada en Flutter
+- **Backend REST API** desplegado en Vercel (serverless)
+- **Base de datos PostgreSQL** en Neon (cloud)
+- **Sincronizacion offline-first** con SQLite local
+
+El proyecto cumple con la Unidad 3 del programa academico al implementar el software encargado de **almacenar y administrar los contenidos** que la aplicacion movil consume.
 
 ---
 
-## 1. Resumen Ejecutivo
+## 2. Planteamiento del problema
 
-GMU Doulos es una aplicacion movil multiplataforma desarrollada con Flutter para la gestion integral del Club de Guias Mayores "Doulos" de la Iglesia Adventista Central de Montemorelos, Nuevo Leon. El sistema resuelve la problematica del manejo manual e ineficiente de datos del club, proporcionando una solucion digital que abarca la gestion de miembros, registro de asistencia, seguimiento de la carpeta de investidura, coordinacion de eventos y generacion de reportes.
+Los clubes de ministerios juveniles adventistas enfrentan los siguientes retos:
 
-La aplicacion implementa una arquitectura offline-first con sincronizacion automatica hacia un backend REST desplegado en Vercel con base de datos PostgreSQL en Neon, garantizando disponibilidad permanente de los datos incluso sin conexion a internet.
-
----
-
-## 2. Planteamiento del Problema
-
-El Club de Guias Mayores "Doulos" enfrenta los siguientes desafios en su operacion:
-
-1. **Registro manual de asistencia:** La asistencia se lleva en papel o hojas de calculo, lo que genera errores, perdida de datos y dificultad para generar estadisticas.
-
-2. **Seguimiento de la carpeta de investidura:** El progreso de cada aspirante en los requisitos de investidura se gestiona de manera descentralizada, sin un sistema unificado para dar seguimiento al flujo de aprobacion (aspirante -> consejero -> director).
-
-3. **Gestion fragmentada de miembros:** La informacion de los miembros (datos personales, rol, clase, unidad) se encuentra dispersa en diferentes documentos y plataformas.
-
-4. **Coordinacion de eventos:** No existe un canal centralizado para informar a los miembros sobre reuniones, campamentos, clases y actividades del club.
-
-5. **Falta de reportes:** Generar reportes de asistencia, listas de miembros o progreso de carpeta requiere trabajo manual significativo.
-
-6. **Inscripcion y onboarding:** Los datos de inscripcion recopilados mediante Google Forms no se integran automaticamente con ningun sistema de gestion.
+1. **Registro manual:** la asistencia, miembros y actividades se llevan en cuadernos o hojas de Excel
+2. **Perdida de informacion:** los datos quedan dispersos en diferentes documentos personales
+3. **Falta de seguimiento:** no hay forma facil de ver el progreso de cada aspirante en su carpeta de investidura
+4. **Comunicacion deficiente:** los avisos y eventos se envian por WhatsApp y se pierden
+5. **Sin estadisticas:** no se puede medir crecimiento, asistencia promedio, etc.
+6. **Dependencia del internet:** las soluciones existentes requieren conexion permanente
 
 ---
 
-## 3. Objetivo General
+## 3. Objetivo general
 
-Desarrollar una aplicacion movil que sirva como herramienta integral para la administracion y gestion del Club de Guias Mayores, permitiendo almacenar, administrar y consultar los contenidos del club de manera eficiente desde dispositivos moviles.
+Desarrollar una **plataforma movil multi-tenant offline-first** que permita a clubes de ministerios juveniles adventistas digitalizar y gestionar sus actividades, miembros y carpetas de investidura, con un backend REST API que almacene y administre los contenidos consumidos por la app.
 
 ---
 
-## 4. Objetivos Especificos
+## 4. Objetivos especificos
 
-1. Implementar un sistema de gestion de miembros con roles diferenciados (Director, Consejero, Aspirante) y control de acceso basado en roles.
-
-2. Desarrollar un modulo de registro de asistencia con multiples criterios de evaluacion (puntualidad, panoleta, biblia, cuota) por unidad y por fecha.
-
-3. Crear un sistema digital para la carpeta de investidura con flujo de trabajo completo: completar requisitos, enviar para revision, pre-aprobar y aprobar.
-
-4. Implementar un calendario de eventos con creacion, visualizacion y notificaciones push.
-
-5. Desarrollar un backend REST API para almacenar y administrar los contenidos que la aplicacion movil consume.
-
-6. Implementar una arquitectura offline-first que permita el uso de la aplicacion sin conexion a internet, con sincronizacion automatica cuando se recupere la conectividad.
-
-7. Generar reportes en formato PDF (lista de miembros, asistencia, carpeta individual) exportables y compartibles.
-
-8. Crear un sistema de importacion masiva de miembros desde Google Sheets para integrar los datos de inscripcion.
+1. Disenar una **arquitectura multi-tenant** que soporte multiples clubes con datos aislados
+2. Implementar un **backend REST API** con 12 endpoints serverless en Vercel
+3. Crear una **base de datos PostgreSQL** con 13 tablas relacionales
+4. Desarrollar la **app movil en Flutter** con Material Design 3
+5. Implementar **sincronizacion offline-first** entre SQLite local y PostgreSQL cloud
+6. Soportar **3 ministerios oficiales** (GM, Conquistadores, Aventureros) con sus jerarquias
+7. Implementar **autenticacion segura** con bcrypt y rate limiting
+8. Generar **reportes PDF** profesionales (lista, asistencia, carpeta individual)
+9. Crear flujo de **onboarding** con codigo de acceso para Directores
+10. Permitir que **miembros se unan** a un club con aprobacion del Director
 
 ---
 
 ## 5. Justificacion
 
-El desarrollo de esta aplicacion se justifica por las siguientes razones:
-
-1. **Eficiencia operativa:** Automatiza procesos que actualmente se realizan de forma manual, reduciendo el tiempo invertido en tareas administrativas.
-
-2. **Integridad de datos:** Centraliza toda la informacion del club en un sistema digital con respaldos automaticos, eliminando la perdida de datos por deterioro o extravio de documentos fisicos.
-
-3. **Accesibilidad:** Permite a directivos, consejeros y aspirantes acceder a la informacion relevante desde sus dispositivos moviles en cualquier momento y lugar.
-
-4. **Trazabilidad:** Registra un historial de todas las acciones realizadas (audit log), proporcionando transparencia y rendicion de cuentas.
-
-5. **Escalabilidad:** El sistema puede ser adoptado por otros clubes de Guias Mayores con minimas modificaciones, dado que la estructura organizativa es estandar.
-
-6. **Aplicacion academica:** Integra conceptos fundamentales de programacion para dispositivos moviles: interfaces de usuario nativas, persistencia de datos, consumo de APIs REST, notificaciones push, y sincronizacion de datos.
+1. **Necesidad real:** los clubes en Mexico aun llevan registros en papel
+2. **Tecnologia accesible:** Flutter permite desarrollar para Android e iOS con un solo codigo
+3. **Costo cero:** el stack usado (Vercel + Neon + Firebase) tiene tier gratuito
+4. **Escalabilidad:** la arquitectura multi-tenant permite agregar nuevos clubes sin codigo
+5. **Resiliencia:** el modo offline garantiza que funcione en lugares con mala conexion
+6. **Estandarizacion:** seguir las plantillas oficiales de la Division Interamericana
 
 ---
 
-## 6. Alcance del Proyecto
+## 6. Alcance
 
-### Incluido
+### Incluye
 
-- Aplicacion movil para Android (APK firmado y listo para distribucion)
-- Backend REST API desplegado en produccion (Vercel)
-- Base de datos en la nube (PostgreSQL en Neon)
-- Sistema de autenticacion con tres roles
-- CRUD completo de miembros, eventos, unidades y asistencia
-- Carpeta de investidura con flujo de aprobacion
-- Generacion de reportes PDF
-- Notificaciones push con Firebase Cloud Messaging
-- Sincronizacion offline-first automatica
-- Importacion masiva desde Google Sheets
-- Modo oscuro
-- Respaldo y restauracion de datos
+- **Frontend movil Android** (Flutter)
+- **Backend REST API** en Vercel (Node.js serverless)
+- **Base de datos** PostgreSQL en Neon
+- **Sincronizacion offline-first** con SQLite local
+- Soporte **multi-club** con codigo de acceso
+- **3 ministerios:** GM, Conquistadores, Aventureros
+- **8 modulos:** miembros, unidades, asistencia, eventos, carpeta, reportes, admin, ajustes
+- **3 roles principales:** Director, Consejero, Aspirante (multiplicado por ministerio)
+- **Autenticacion** con bcrypt
+- **Notificaciones push** con Firebase Cloud Messaging
+- **Reportes PDF**
+- **Importacion** desde Google Sheets (CSV)
 
-### Excluido
+### No incluye (en esta version)
 
-- Publicacion en Google Play Store (requiere cuenta de desarrollador)
-- Aplicacion para iOS (requiere Mac y cuenta Apple Developer)
-- Panel web de administracion
-- Integracion directa con Google Forms API
-- Sistema de pagos o cobros en linea
-- Chat o mensajeria entre miembros
-
----
-
-## 7. Tecnologias Utilizadas
-
-| Tecnologia | Version | Proposito |
-|------------|---------|-----------|
-| Flutter | 3.x | Framework multiplataforma para desarrollo movil |
-| Dart | 3.x | Lenguaje de programacion |
-| SQLite (sqflite) | 2.3.0 | Base de datos local en el dispositivo |
-| PostgreSQL (Neon) | Serverless | Base de datos en la nube |
-| Vercel | Serverless | Hosting del backend API |
-| Node.js | 18.x | Runtime del backend |
-| @neondatabase/serverless | 0.10.x | Driver de PostgreSQL para Vercel |
-| Firebase Cloud Messaging | 15.2.1 | Notificaciones push |
-| Material Design 3 | Integrado en Flutter | Sistema de diseno de interfaces |
-| Google Fonts (Poppins) | 6.1.0 | Tipografia |
-| fl_chart | 0.69.0 | Graficas y estadisticas |
-| pdf | 3.11.1 | Generacion de documentos PDF |
-| crypto | 3.0.3 | Hashing SHA-256 para contrasenas |
-| Git / GitHub | - | Control de versiones |
-| Android Studio | - | IDE de desarrollo |
-| Gradle | 8.x | Sistema de build para Android |
+- Aplicacion **iOS** (planeada para v3.0)
+- **Panel web** de administracion (futuro)
+- **Sincronizacion en tiempo real** (WebSockets, futuro)
+- **Pagos integrados** (el upgrade a Pro es manual)
+- **Chat** entre usuarios
 
 ---
 
-## 8. Arquitectura del Sistema
+## 7. Tecnologias utilizadas
 
-La aplicacion implementa una arquitectura de tres capas con patron offline-first:
+| Capa | Tecnologia | Version | Proposito |
+|------|-----------|---------|-----------|
+| **Frontend** | Flutter | 3.x | Framework UI multiplataforma |
+| **Lenguaje** | Dart | 3.x | Lenguaje de programacion del frontend |
+| **Design** | Material 3 | - | Sistema de diseno de Google |
+| **Tipografia** | Google Fonts (Poppins) | 6.3.3 | Fuente principal |
+| **DB local** | sqflite (SQLite) | 2.3.0 | Cache offline |
+| **HTTP** | http | 1.2.0 | Cliente REST |
+| **PDF** | pdf | 3.11.1 | Generacion de PDFs |
+| **Charts** | fl_chart | 0.69.0 | Graficas estadisticas |
+| **Backend runtime** | Node.js | 20.x | Runtime serverless |
+| **Backend host** | Vercel | - | Hosting serverless |
+| **DB cloud** | PostgreSQL (Neon) | 16 | Base de datos relacional |
+| **Driver DB** | @neondatabase/serverless | 0.9.0 | Cliente PostgreSQL |
+| **Hashing** | bcryptjs | 2.4.3 | Encriptacion de contrasenas |
+| **Push notifs** | Firebase Cloud Messaging | 15.2.10 | Notificaciones push |
+| **Repositorio** | GitHub | - | Control de version |
+| **CI/CD** | Vercel auto-deploy | - | Despliegue continuo |
+
+---
+
+## 8. Arquitectura del sistema
+
+### Diagrama de arquitectura (3 capas)
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                  CAPA DE PRESENTACION                 │
-│                                                      │
-│  ┌─────────┐  ┌──────────┐  ┌───────────────────┐   │
-│  │ Screens │  │ Widgets  │  │ Theme / Config    │   │
-│  │ (25+)   │  │ (8)      │  │ Material 3        │   │
-│  └────┬────┘  └─────┬────┘  └───────────────────┘   │
-│       │              │                               │
-├───────┴──────────────┴───────────────────────────────┤
-│                  CAPA DE SERVICIOS                    │
-│                                                      │
-│  ┌──────────────┐  ┌───────────────┐                 │
-│  │ AuthService  │  │ SyncManager   │                 │
-│  │ (Singleton)  │  │ (Auto-sync)   │                 │
-│  └──────────────┘  └───────┬───────┘                 │
-│                            │                         │
-│  ┌──────────────┐  ┌──────┴────────┐                 │
-│  │ PDFService   │  │ ApiService    │──── HTTP ────┐  │
-│  └──────────────┘  └───────────────┘              │  │
-│                                                   │  │
-│  ┌──────────────────────────┐                     │  │
-│  │ DatabaseService (SQLite) │                     │  │
-│  │ Base de datos local      │                     │  │
-│  └──────────────────────────┘                     │  │
-│                                                   │  │
-├───────────────────────────────────────────────────┤  │
-│                  CAPA DE BACKEND                  │  │
-│                                                   │  │
-│  ┌─────────────────────────────────────────────┐  │  │
-│  │           Vercel Serverless Functions        │◄─┘  │
-│  │                                             │     │
-│  │  /api/miembros    /api/eventos              │     │
-│  │  /api/asistencia  /api/unidades             │     │
-│  │  /api/auth        /api/sync                 │     │
-│  │  /api/health      /api/setup                │     │
-│  └────────────────────┬────────────────────────┘     │
-│                       │                              │
-│  ┌────────────────────┴────────────────────────┐     │
-│  │         PostgreSQL (Neon Serverless)         │     │
-│  │         12 tablas, indices optimizados       │     │
-│  └─────────────────────────────────────────────┘     │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-```
-
-### Flujo de datos (Offline-First)
-
-1. El usuario realiza una accion (ej: registrar asistencia)
-2. Los datos se guardan **inmediatamente** en SQLite local
-3. El SyncManager detecta el cambio y programa una sincronizacion con debounce de 3 segundos
-4. Si hay conexion a internet, los datos se envian al backend via API REST
-5. El backend almacena los datos en PostgreSQL
-6. Al abrir la app, se descargan automaticamente los datos mas recientes del servidor
-
----
-
-## 9. Modelo de Datos
-
-La base de datos consta de 12 tablas principales:
-
-### miembros
-Almacena la informacion de todos los miembros del club.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico UUID |
-| nombre | TEXT | Nombre del miembro |
-| apellido | TEXT | Apellido del miembro |
-| fecha_nacimiento | TEXT | Fecha de nacimiento |
-| telefono | TEXT | Numero de telefono |
-| email | TEXT | Correo electronico |
-| foto_url | TEXT | Ruta de la foto de perfil |
-| clase | TEXT | Clase de Guia Mayor (Aspirante, Guia Mayor, etc.) |
-| rol | TEXT | Rol en el club (Miembro, Consejero, Director, etc.) |
-| activo | INTEGER | Estado activo/inactivo (1/0) |
-| fecha_registro | TEXT | Fecha de registro en el sistema |
-| usuario | TEXT | Nombre de usuario para login |
-| password_hash | TEXT | Hash SHA-256 de la contrasena |
-
-### eventos
-Almacena los eventos y actividades del club.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| titulo | TEXT | Titulo del evento |
-| descripcion | TEXT | Descripcion detallada |
-| fecha | TEXT | Fecha del evento |
-| hora | TEXT | Hora del evento |
-| ubicacion | TEXT | Lugar del evento |
-| tipo | TEXT | Tipo: reunion, campamento, clase, ceremonia, actividad, servicio |
-| latitud | REAL | Coordenada de latitud |
-| longitud | REAL | Coordenada de longitud |
-
-### unidades
-Grupos organizativos del club.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| nombre | TEXT | Nombre de la unidad |
-| descripcion | TEXT | Descripcion de la unidad |
-| activo | INTEGER | Estado activo/inactivo |
-| fecha_creacion | TEXT | Fecha de creacion |
-
-### unidad_miembros
-Relacion entre unidades y miembros.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| unidad_id | TEXT (FK) | Referencia a la unidad |
-| miembro_id | TEXT (FK) | Referencia al miembro |
-| rol_en_unidad | TEXT | Rol dentro de la unidad (miembro, consejero) |
-| fecha_asignacion | TEXT | Fecha de asignacion |
-
-### asistencia
-Registros de asistencia con cuatro criterios.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| unidad_id | TEXT (FK) | Referencia a la unidad |
-| miembro_id | TEXT (FK) | Referencia al miembro |
-| fecha | TEXT | Fecha del registro |
-| dia_semana | TEXT | Dia de la semana |
-| puntualidad | TEXT | Llego a tiempo (1/0) |
-| panoleta | TEXT | Trajo panoleta (1/0) |
-| biblia | TEXT | Trajo biblia (1/0) |
-| cuota | TEXT | Pago cuota (1/0) |
-| registrado_por | TEXT | ID de quien registro |
-| fecha_registro | TEXT | Timestamp del registro |
-
-### carpeta_secciones
-Secciones de la carpeta de investidura.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| numero | INTEGER | Numero de orden de la seccion |
-| nombre | TEXT | Nombre de la seccion |
-| descripcion | TEXT | Descripcion de la seccion |
-
-### carpeta_requisitos
-Requisitos dentro de cada seccion de la carpeta.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| seccion_id | TEXT (FK) | Referencia a la seccion |
-| nombre | TEXT | Nombre del requisito |
-| descripcion | TEXT | Descripcion detallada |
-| orden | INTEGER | Orden dentro de la seccion |
-
-### carpeta_progreso
-Progreso de cada miembro en los requisitos de la carpeta.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| miembro_id | TEXT (FK) | Referencia al miembro |
-| requisito_id | TEXT (FK) | Referencia al requisito |
-| completado | INTEGER | Marcado como completado (1/0) |
-| fecha_completado | TEXT | Fecha de completado |
-| completado_por | TEXT | ID de quien completo |
-| aprobado | INTEGER | Aprobado por director (1/0) |
-| fecha_aprobado | TEXT | Fecha de aprobacion |
-| aprobado_por | TEXT | ID de quien aprobo |
-| estado | TEXT | Estado: pendiente, enviado, pre-aprobado, aprobado, devuelto |
-| notas | TEXT | Notas adicionales |
-| evidencia_path | TEXT | Ruta de archivo de evidencia |
-| comentario_devolucion | TEXT | Comentario si fue devuelto |
-| fecha_envio | TEXT | Fecha de envio para revision |
-
-### especialidades
-Catalogo de especialidades disponibles.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| nombre | TEXT | Nombre de la especialidad |
-| categoria | TEXT | Categoria de la especialidad |
-| nivel | TEXT | Nivel de dificultad |
-| requisitos | TEXT | Requisitos en formato JSON |
-
-### miembro_especialidad
-Progreso de miembros en especialidades.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| miembro_id | TEXT (FK) | Referencia al miembro |
-| especialidad_id | TEXT (FK) | Referencia a la especialidad |
-| fecha_inicio | TEXT | Fecha de inicio |
-| requisitos_completados | TEXT | Lista JSON de requisitos completados |
-| completado | INTEGER | Terminado (1/0) |
-| fecha_completado | TEXT | Fecha de finalizacion |
-
-### audit_log
-Registro de actividad del sistema.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| id | TEXT (PK) | Identificador unico |
-| accion | TEXT | Tipo de accion (crear, editar, eliminar, registrar) |
-| tabla | TEXT | Tabla afectada |
-| registro_id | TEXT | ID del registro afectado |
-| descripcion | TEXT | Descripcion de la accion |
-| usuario_id | TEXT | ID del usuario que realizo la accion |
-| usuario_nombre | TEXT | Nombre del usuario |
-| fecha | TEXT | Fecha y hora de la accion |
-
-### configuracion
-Configuracion general de la aplicacion.
-
-| Campo | Tipo | Descripcion |
-|-------|------|-------------|
-| clave | TEXT (PK) | Nombre de la configuracion |
-| valor | TEXT | Valor de la configuracion |
-
----
-
-## 10. Funcionalidades Implementadas
-
-### 10.1 Autenticacion y Roles
-
-- Inicio de sesion con usuario y contrasena
-- Hashing de contrasenas con SHA-256
-- Tres roles con permisos diferenciados: Director, Consejero, Aspirante
-- Bloqueo temporal despues de 5 intentos fallidos
-- Persistencia de sesion (no requiere login cada vez que se abre la app)
-- Configuracion inicial con creacion de cuenta de administrador
-
-### 10.2 Gestion de Miembros
-
-- Crear, editar y eliminar miembros
-- Busqueda por nombre con filtros por clase y rol
-- Foto de perfil con camara o galeria
-- Avatares predefinidos cuando no hay foto
-- Creacion de cuentas de acceso para miembros
-- Importacion masiva desde Google Sheets (copiar/pegar)
-
-### 10.3 Gestion de Unidades
-
-- Crear y editar unidades
-- Asignar miembros y consejeros a unidades
-- Vista dedicada para cada consejero con su unidad
-
-### 10.4 Registro de Asistencia
-
-- Registro por unidad y por fecha
-- Cuatro criterios de evaluacion: puntualidad, panoleta, biblia, cuota
-- Historial de asistencia con filtros
-- Estadisticas y porcentajes de asistencia
-
-### 10.5 Calendario de Eventos
-
-- Visualizacion en formato calendario mensual
-- Seis tipos de evento: reunion, campamento, clase, ceremonia, actividad, servicio
-- Creacion, edicion y eliminacion de eventos
-- Detalle con ubicacion y descripcion
-
-### 10.6 Carpeta de Investidura
-
-- Estructura jerarquica: secciones con requisitos
-- Administracion de secciones y requisitos (Director)
-- Flujo de trabajo completo:
-  - Aspirante completa y envia requisitos
-  - Consejero revisa y pre-aprueba
-  - Director da aprobacion final
-  - Posibilidad de devolucion con comentarios
-- Barra de progreso por seccion y general
-- Subida de evidencia fotografica
-
-### 10.7 Reportes PDF
-
-- Reporte de lista de miembros (nombre, contacto, rol, clase)
-- Reporte de asistencia por fecha y unidad con porcentajes
-- Reporte individual de carpeta de investidura con progreso detallado
-- Exportacion y comparticion via share
-
-### 10.8 Notificaciones Push
-
-- Firebase Cloud Messaging con temas por rol (admin, consejero, aspirante)
-- Notificaciones locales como respaldo
-- Envio de notificaciones desde el panel de administracion
-
-### 10.9 Sincronizacion Offline-First
-
-- Almacenamiento local en SQLite para uso sin internet
-- Sincronizacion automatica con debounce de 3 segundos
-- Descarga automatica al iniciar la app
-- Sincronizacion manual desde el panel de administracion
-- Resolucion de conflictos por upsert (ON CONFLICT UPDATE)
-
-### 10.10 Interfaz de Usuario
-
-- Diseno Material 3 con tema verde institucional
-- Modo oscuro con persistencia
-- Splash screen nativo personalizado
-- Icono de aplicacion personalizado
-- Widgets reutilizables (StatCard, GradientCard, UserAvatar, etc.)
-- Skeleton loaders para estados de carga
-- Estados vacios informativos
-
-### 10.11 Seguridad
-
-- Hashing SHA-256 de contrasenas
-- API Key para autenticacion del backend
-- Sanitizacion de inputs
-- ProGuard para ofuscacion del APK
-- Bloqueo por intentos fallidos de login
-- Audit log de todas las acciones
-
-### 10.12 Administracion
-
-- Panel centralizado con estadisticas y acciones rapidas
-- Gestion de cuentas de usuario
-- Registro de actividad con filtros
-- Respaldo y restauracion de base de datos
-- Importacion masiva de miembros
-
----
-
-## 11. Pantallas de la Aplicacion
-
-La aplicacion cuenta con mas de 25 pantallas organizadas por modulo:
-
-| Modulo | Pantalla | Descripcion |
-|--------|----------|-------------|
-| Autenticacion | Login | Inicio de sesion |
-| Autenticacion | Onboarding | Bienvenida al primer uso |
-| Autenticacion | First Run Setup | Configuracion inicial del admin |
-| Principal | Home Screen | Dashboard con estadisticas |
-| Miembros | Miembros Screen | Lista y gestion de miembros |
-| Miembros | Perfil Screen | Perfil del usuario |
-| Miembros | Busqueda Screen | Busqueda de miembros |
-| Asistencia | Asistencia Screen | Registro de asistencia |
-| Asistencia | Historial Asistencia | Historial de registros |
-| Calendario | Calendario Screen | Vista de calendario con eventos |
-| Carpeta | Carpeta Screen | Carpeta del aspirante |
-| Carpeta | Carpeta Review Screen | Revision del consejero |
-| Carpeta | Carpeta Approve Screen | Aprobacion del director |
-| Carpeta | Carpeta Manage Screen | Administrar secciones y requisitos |
-| Unidades | Unidades Screen | Lista de unidades |
-| Unidades | Consejero Unidad Screen | Vista del consejero |
-| Admin | Admin Panel Screen | Panel de administracion |
-| Admin | Gestion Cuentas Screen | Gestion de cuentas |
-| Admin | Importar Miembros Screen | Importar desde Google Sheets |
-| Admin | Sync Screen | Sincronizacion con backend |
-| Reportes | Reportes Screen | Generacion de PDFs |
-| Estadisticas | Estadisticas Screen | Graficas y datos |
-| Especialidades | Especialidades Screen | Gestion de especialidades |
-| Evidencias | Evidencias Screen | Subida de evidencias |
-| Herramientas | Herramientas Screen | Utilidades |
-| Manual | Manual Screen | Manual digital |
-| Notificaciones | Notificaciones Screen | Centro de notificaciones |
-| Ajustes | Ajustes Screen | Configuracion de la app |
-| Ajustes | Backup Screen | Respaldo de datos |
-| Ajustes | Audit Log Screen | Registro de actividad |
-
----
-
-## 12. API REST
-
-### Endpoints del Backend
-
-Todas las rutas requieren el header `X-API-Key` para autenticacion (excepto `/api/health`).
-
-| Metodo | Ruta | Descripcion | Body / Parametros |
-|--------|------|-------------|-------------------|
-| GET | /api/health | Estado del servidor y base de datos | - |
-| POST | /api/setup | Inicializar tablas de la base de datos | - |
-| POST | /api/auth | Autenticar usuario | `{ usuario, password_hash }` |
-| GET | /api/miembros | Listar todos los miembros | Query: `?rol=X`, `?activo=1` |
-| POST | /api/miembros | Crear o actualizar miembro | JSON con datos del miembro |
-| DELETE | /api/miembros | Eliminar miembro | Query: `?id=X` |
-| GET | /api/eventos | Listar todos los eventos | Query: `?tipo=X` |
-| POST | /api/eventos | Crear o actualizar evento | JSON con datos del evento |
-| DELETE | /api/eventos | Eliminar evento | Query: `?id=X` |
-| GET | /api/unidades | Listar unidades con miembros | - |
-| POST | /api/unidades | Crear o actualizar unidad | JSON con datos de la unidad |
-| DELETE | /api/unidades | Eliminar unidad | Query: `?id=X` |
-| GET | /api/asistencia | Listar registros de asistencia | Query: `?unidad_id=X`, `?fecha=X` |
-| POST | /api/asistencia | Registrar asistencia | JSON con datos de asistencia |
-| POST | /api/sync | Sincronizacion masiva de datos | JSON con arrays de todas las tablas |
-
-### Ejemplo de Respuesta: GET /api/health
-
-```json
-{
-  "status": "ok",
-  "database": "connected",
-  "server_time": "2026-03-18T19:16:42.078Z",
-  "env_vars": {
-    "POSTGRES_URL": true,
-    "API_KEY": true
-  },
-  "endpoints": [
-    "/api/miembros",
-    "/api/eventos",
-    "/api/asistencia",
-    "/api/unidades",
-    "/api/auth",
-    "/api/sync",
-    "/api/setup"
-  ],
-  "version": "2.0.0"
-}
-```
-
-### Ejemplo de Sincronizacion: POST /api/sync
-
-```json
-{
-  "miembros": [...],
-  "eventos": [...],
-  "unidades": [...],
-  "unidad_miembros": [...],
-  "asistencia": [...]
-}
-```
-
-Respuesta:
-```json
-{
-  "ok": true,
-  "counts": {
-    "miembros": 12,
-    "eventos": 5,
-    "unidades": 3,
-    "unidad_miembros": 10,
-    "asistencia": 27
-  }
-}
++----------------------------------------+
+|     CAPA DE PRESENTACION (Cliente)     |
+|                                        |
+|     Flutter App Android                |
+|     - 30+ pantallas                    |
+|     - Material Design 3                |
+|     - SQLite local (offline cache)     |
++--------------+-------------------------+
+               |
+               | HTTPS REST + JSON
+               |
++--------------v-------------------------+
+|       CAPA DE NEGOCIO (Backend)        |
+|                                        |
+|     Vercel Serverless Functions        |
+|     - 12 endpoints REST                |
+|     - Node.js + Express-like           |
+|     - bcrypt + rate limiting           |
+|     - CORS habilitado                  |
++--------------+-------------------------+
+               |
+               | TCP + SQL
+               |
++--------------v-------------------------+
+|       CAPA DE DATOS (Persistencia)     |
+|                                        |
+|     PostgreSQL en Neon                 |
+|     - 13 tablas relacionales           |
+|     - Multi-tenant (club_id)           |
+|     - Indices para queries rapidas     |
++----------------------------------------+
 ```
 
 ---
 
-## 13. Pruebas Realizadas
+## 9. Modelo de datos
 
-### Pruebas Funcionales
+### Diagrama Entidad-Relacion (simplificado)
 
-- Verificacion de todos los flujos CRUD (crear, leer, actualizar, eliminar) para cada entidad
-- Prueba del flujo completo de carpeta de investidura (completar -> enviar -> pre-aprobar -> aprobar)
-- Verificacion de permisos por rol (cada rol solo accede a sus funciones)
-- Prueba de login con credenciales correctas e incorrectas
-- Verificacion del bloqueo por intentos fallidos
+```
+[clubes] 1 ------- N [miembros]
+   |                    |
+   |                    | N
+   |                    |
+   |                    M [unidad_miembros]
+   |                    |
+   |                    | N
+   |                    |
+   | 1 ----- N [unidades]
+   |                    |
+   |                    | 1
+   |                    |
+   |                    N [asistencia]
+   |
+   | 1 ----- N [eventos]
+   |
+   | 1 ----- N [carpeta_secciones]
+                       |
+                       | 1
+                       N
+                  [carpeta_requisitos]
+                       |
+                       | 1
+                       N
+                  [carpeta_progreso]
+                       |
+                       | N
+                       1
+                  [miembros]
+```
 
-### Pruebas de Sincronizacion
+### Tablas principales (13)
 
-- Sincronizacion exitosa de 12 miembros, 5 eventos, 3 unidades, 10 asignaciones y 27 registros de asistencia
-- Prueba de creacion de datos sin internet y sincronizacion posterior
-- Verificacion de resolucion de conflictos (upsert)
-
-### Pruebas de Interfaz
-
-- Verificacion de modo oscuro en todas las pantallas
-- Prueba de responsividad en diferentes tamanos de pantalla
-- Verificacion de estados vacios, carga y error
-
-### Pruebas de Backend
-
-- Verificacion de todos los endpoints con curl
-- Prueba de autenticacion con API Key valida e invalida
-- Verificacion de inicializacion de tablas (setup)
-- Prueba de health check con conexion a base de datos
-
-### Pruebas de Compilacion
-
-- Generacion exitosa de APK firmado en modo release
-- Verificacion de ProGuard y minificacion R8
-- Instalacion y ejecucion en dispositivo fisico Android
+1. **clubes** - tenants del sistema
+2. **miembros** - usuarios con auth y rol
+3. **unidades** - grupos pequenos del club
+4. **unidad_miembros** - relacion N:M
+5. **asistencia** - registros por unidad+fecha+miembro
+6. **eventos** - calendario compartido
+7. **carpeta_secciones** - secciones de la investidura
+8. **carpeta_requisitos** - requisitos por seccion
+9. **carpeta_progreso** - estado de cada requisito por aspirante
+10. **especialidades** - catalogo de especialidades JA
+11. **miembro_especialidad** - progreso N:M
+12. **audit_log** - historial de acciones
+13. **configuracion** - key-value para settings
 
 ---
 
-## 14. Resultados
+## 10. Modulos del sistema
 
-### Datos Sincronizados Exitosamente
+| Modulo | Pantallas | Roles con acceso |
+|--------|-----------|------------------|
+| **Onboarding** | 4 paginas + ClubSetup | Todos (primera vez) |
+| **Auth** | Login, FirstRun | Todos |
+| **Home** | Inicio | Todos |
+| **Miembros** | Lista, Crear, Editar, Detalle | Director |
+| **Unidades** | Lista, Detalle, Asignar | Director |
+| **Asistencia** | Registrar, Historial | Director, Consejero |
+| **Calendario** | Vista mensual, Crear evento | Todos (lectura), Director (escritura) |
+| **Carpeta** | Mi carpeta, Aprobar, Gestionar | Aspirante (suya), Consejero/Director (todas) |
+| **Reportes** | 3 tipos PDF | Director (Plan Pro) |
+| **Admin** | Panel, Cuentas, Importar, Aprobaciones, Sync | Director |
+| **Ajustes** | Tema, Notifs, Backup, Plan | Todos (lo suyo) |
+| **Perfil** | Ver/editar usuario | Todos |
 
-| Entidad | Cantidad |
-|---------|----------|
-| Miembros | 12 |
-| Eventos | 5 |
-| Unidades | 3 |
-| Asignaciones unidad-miembro | 10 |
+---
+
+## 11. Endpoints del backend (12 funciones)
+
+| Endpoint | Metodos | Autenticacion | Descripcion |
+|----------|---------|---------------|-------------|
+| `/api/health` | GET | - | Health check |
+| `/api/setup` | POST | API Key | Crea/recrea tablas |
+| `/api/auth` | POST | - | Login con bcrypt |
+| `/api/miembros` | GET, POST, PUT, DELETE | API Key | CRUD miembros |
+| `/api/eventos` | GET, POST, PUT, DELETE | API Key | CRUD eventos |
+| `/api/unidades` | GET, POST, PUT, DELETE | API Key | CRUD unidades |
+| `/api/asistencia` | GET, POST, PUT, DELETE | API Key | CRUD asistencia |
+| `/api/sync` | GET, POST | API Key | Sincronizacion masiva |
+| `/api/clubes` | GET, POST, PUT | Mixto | Multi-funcional: codigo, onboarding, unirse, aprobar, reset |
+| `/api/send-notification` | POST | API Key | FCM server-side |
+
+> **Nota:** El plan Hobby de Vercel limita a 12 funciones serverless. Por eso `/api/clubes` consolida onboarding, unirse, aprobar y reset password en un solo endpoint usando el campo `action`.
+
+---
+
+## 12. Sistema de roles
+
+### Jerarquia por ministerio
+
+```
+COORDINADOR GENERAL (lectura de todo el club)
+|
++-- DIRECTOR GM
+|   +-- Director Asociado GM
+|   +-- Secretario GM
+|   +-- Tesorero GM
+|   +-- Consejero GM
+|       +-- Aspirante GM
+|
++-- DIRECTOR CONQ
+|   +-- Director Asociado Conq
+|   +-- Secretario Conq
+|   +-- Consejero Conq
+|       +-- Conquistador
+|
++-- DIRECTOR AVENTUREROS
+    +-- Director Asociado Aventureros
+    +-- Consejero Aventureros
+        +-- Aventurero
+```
+
+### Permisos por rol
+
+| Funcion | Director | Consejero | Aspirante | Coordinador |
+|---------|:--------:|:---------:|:---------:|:-----------:|
+| Ver miembros | ✓ | parcial | ✗ | ✓ |
+| Crear/editar miembros | ✓ | ✗ | ✗ | ✗ |
+| Registrar asistencia | ✓ | ✓ | ✗ | ✗ |
+| Crear eventos | ✓ | ✗ | ✗ | ✗ |
+| Ver carpeta propia | ✓ | ✓ | ✓ | ✓ |
+| Aprobar carpeta | ✓ | pre-aprobar | ✗ | ✗ |
+| Generar PDFs | ✓ (Pro) | ✗ | ✗ | ✓ (Pro) |
+| Aprobar solicitudes | ✓ | ✗ | ✗ | ✗ |
+| Configurar club | ✓ | ✗ | ✗ | ✗ |
+
+---
+
+## 13. Casos de uso principales
+
+### Caso 1: Director crea su club
+
+1. Director instala la app
+2. Pasa el onboarding inicial
+3. Toca "Soy Director" e ingresa codigo de acceso (ej: `LEONES2026`)
+4. La app verifica el codigo via `/api/clubes?codigo=LEONES2026`
+5. Selecciona ministerio (GM o Conquistadores)
+6. Llena sus datos y crea contraseña
+7. App envia `POST /api/clubes` con `action: "onboarding"`
+8. Backend crea el Director, copia plantilla DIA, retorna api_key
+9. App guarda club_id y api_key local
+10. Director entra al panel principal con todos los permisos
+
+### Caso 2: Aspirante se une al club
+
+1. Aspirante recibe el codigo del club de su Director
+2. Instala la app, pasa el onboarding
+3. Toca "Unirme" e ingresa el codigo
+4. Selecciona ministerio, rol "Miembro" y su clase
+5. Llena datos personales y crea contraseña
+6. App envia `POST /api/clubes` con `action: "unirse"`
+7. Backend crea miembro con `activo = 0`
+8. App muestra "Solicitud enviada"
+9. Director ve la solicitud en "Aprobaciones Pendientes"
+10. Director toca "Aprobar" → backend hace `UPDATE activo = 1`
+11. Aspirante puede iniciar sesion
+
+### Caso 3: Sincronizacion offline
+
+1. Director registra asistencia sin internet
+2. Datos se guardan en SQLite local
+3. SyncManager detecta el cambio y agenda upload
+4. Despues de 3 segundos intenta `POST /api/sync` → falla (sin internet)
+5. Cuando vuelve la conexion, SyncManager reintenta
+6. Backend hace `UPSERT` en PostgreSQL
+7. Otro Director del mismo club abre la app y descarga los nuevos registros
+
+---
+
+## 14. Resultados obtenidos
+
+### Datos reales de prueba
+
+Despues de las pruebas iniciales en el club Doulos:
+
+| Recurso | Cantidad |
+|---------|---------:|
+| Clubes activos | 4 |
+| Miembros registrados | 12 |
+| Eventos creados | 5 |
+| Unidades activas | 3 |
 | Registros de asistencia | 27 |
+| Asignaciones unidad-miembro | 10 |
+| Endpoints REST funcionando | 12 |
+| Tamaño del APK release | 56.7 MB |
 
-### Metricas de la Aplicacion
+### Pruebas realizadas
 
-- **Tamano del APK:** 56.6 MB (optimizado con R8 y tree-shaking)
-- **Pantallas implementadas:** 30+
-- **Endpoints API:** 8 rutas principales
-- **Tablas en base de datos:** 12
-- **Servicios singleton:** 6 (Auth, Database, API, Sync, Notification, PDF)
-
-### Objetivos Cumplidos
-
-- Sistema de roles funcional con tres niveles de acceso
-- Registro de asistencia con cuatro criterios operativo
-- Carpeta de investidura con flujo de aprobacion completo
-- Backend REST API desplegado y funcional en produccion
-- Sincronizacion offline-first con auto-sync
-- Generacion de reportes PDF
-- Importacion desde Google Sheets
-- Notificaciones push configuradas
+1. **Multi-tenant:** creados 4 clubes (Doulos, Leones, Centinelas, Aguilas) con diferentes combinaciones de ministerios
+2. **Onboarding:** verificado el flujo completo de Director con codigo
+3. **Sincronizacion:** subida exitosa de 12 miembros + 27 asistencias
+4. **Autenticacion:** login con bcrypt y migracion automatica de SHA-256 legacy
+5. **Carpeta:** flujo completo Aspirante → Consejero → Director
+6. **PDFs:** generados los 3 tipos de reporte
+7. **Modo offline:** verificado funcionamiento sin internet
+8. **APK firmado:** generado y probado en dispositivo real
 
 ---
 
 ## 15. Conclusiones
 
-1. **Flutter como framework multiplataforma** demostro ser una herramienta eficaz para el desarrollo rapido de aplicaciones moviles con interfaces de alta calidad, permitiendo generar una aplicacion completa con un solo codigo base.
+GMU Doulos v2.0 cumple con el objetivo de **almacenar y administrar contenidos** que la aplicacion movil consume, satisfaciendo los requisitos de la Unidad 3 del programa academico.
 
-2. **La arquitectura offline-first** fue fundamental para garantizar la usabilidad de la aplicacion en contextos donde la conectividad no es constante, como campamentos y actividades al aire libre.
+**Logros principales:**
 
-3. **El backend serverless en Vercel** con PostgreSQL en Neon proporciono una solucion escalable y de bajo costo para el almacenamiento y administracion de contenidos, cumpliendo con el objetivo de desarrollar software backend para el consumo de la aplicacion movil.
+1. Backend REST API funcional con 12 endpoints en Vercel
+2. Base de datos PostgreSQL multi-tenant con 13 tablas
+3. App movil con sincronizacion offline-first
+4. Soporte para 3 ministerios oficiales con jerarquias completas
+5. Sistema de codigos de acceso para multi-club
+6. Plantillas oficiales DIA pre-cargadas
+7. Autenticacion segura con bcrypt y rate limiting
+8. Reportes PDF profesionales
+9. Documentacion completa (manual de usuario, manual tecnico, este documento)
+10. APK firmado listo para distribuir
 
-4. **El sistema de roles** permite una gestion organizada donde cada usuario tiene acceso unicamente a las funcionalidades correspondientes a su nivel de responsabilidad en el club.
+**Lecciones aprendidas:**
 
-5. **La digitalizacion de la carpeta de investidura** con flujo de aprobacion elimina la necesidad de documentos fisicos y proporciona trazabilidad completa del proceso.
-
-6. El proyecto integro exitosamente multiples conceptos de programacion para dispositivos moviles: interfaces nativas, persistencia local, consumo de APIs REST, notificaciones push, generacion de archivos, y sincronizacion de datos.
-
----
-
-## 16. Trabajo Futuro
-
-1. **Soporte para iOS:** Compilar y distribuir la aplicacion para dispositivos Apple mediante TestFlight o App Store.
-
-2. **Publicacion en Google Play Store:** Registrar cuenta de desarrollador y publicar la aplicacion para distribucion masiva.
-
-3. **Autenticacion biometrica:** Agregar soporte para huella digital y reconocimiento facial como metodo alternativo de inicio de sesion.
-
-4. **Sincronizacion en tiempo real:** Implementar WebSockets para que los cambios se reflejen instantaneamente en todos los dispositivos conectados.
-
-5. **Panel web de administracion:** Desarrollar una interfaz web complementaria para gestion desde computadoras.
-
-6. **Integracion directa con Google Forms:** Automatizar la importacion de datos de inscripcion sin necesidad de exportar CSV manualmente.
-
-7. **Sistema de mensajeria interna:** Agregar chat o sistema de anuncios dentro de la aplicacion.
-
-8. **Reportes avanzados con graficas:** Incluir graficas de tendencias en los reportes PDF (asistencia por mes, progreso historico).
-
-9. **Multi-club:** Extender la aplicacion para soportar multiples clubes con administracion independiente.
-
-10. **Pruebas automatizadas:** Implementar pruebas unitarias, de integracion y de widgets para garantizar la estabilidad a largo plazo.
+- La sincronizacion offline-first es compleja pero indispensable para apps reales
+- El limite de funciones serverless de Vercel obliga a consolidar endpoints
+- bcrypt es esencial para produccion (SHA-256 sin salt es inseguro)
+- Multi-tenancy requiere diseñar el esquema desde el dia 1
 
 ---
 
-*GMU Doulos v1.1.0 - Club de Guias Mayores "Doulos"*
-*Iglesia Adventista Central - Montemorelos, Nuevo Leon*
-*Marzo 2026*
+## 16. Trabajos futuros
+
+Lo que se podria mejorar en versiones siguientes:
+
+1. **App iOS** - el codigo Flutter ya es compatible, solo falta compilar en Mac
+2. **Panel web** de administracion para super-admin
+3. **Sincronizacion en tiempo real** con WebSockets
+4. **Modulo de chat** y anuncios
+5. **Pagos integrados** para upgrade a Plan Pro
+6. **Catalogo completo** de especialidades JA con seguimiento
+7. **Autenticacion biometrica** (huella, Face ID)
+8. **Modo Aventureros completo** (UI especifica para 4-9 anos)
+9. **Sistema de logros** y badges digitales
+10. **Internacionalizacion** (i18n) para otros paises de la DIA
+
+---
+
+## 17. Repositorio y enlaces
+
+- **Codigo fuente:** https://github.com/PabloIAIN/gmu_doulos
+- **Backend en produccion:** https://gmu-doulos.vercel.app/api
+- **Documentacion del usuario:** [MANUAL_USUARIO.md](./MANUAL_USUARIO.md)
+- **Manual tecnico:** [MANUAL_TECNICO.md](./MANUAL_TECNICO.md)
+
+---
+
+**Version:** 2.0
+**Fecha:** 2026
+**Autor:** Pablo Garza
+**Universidad:** Universidad de Montemorelos

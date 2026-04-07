@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../config/app_config.dart';
+import '../onboarding/club_setup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onLoginSuccess;
@@ -392,7 +393,19 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                         ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 16),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => ClubSetupScreen(
+                                onSetupComplete: widget.onLoginSuccess,
+                              ),
+                            ));
+                          },
+                          icon: const Icon(Icons.shield, size: 18),
+                          label: const Text('¿Primera vez? Configurar club'),
+                        ),
+                        const SizedBox(height: 12),
                         Text(
                           AppConfig.tagline,
                           style: GoogleFonts.poppins(

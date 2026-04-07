@@ -31,7 +31,32 @@ class DatabaseService {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Tabla de miembros (con campos auth)
+    // Tabla clubes (multi-tenant)
+    await db.execute('''
+      CREATE TABLE clubes(
+        id TEXT PRIMARY KEY,
+        nombre TEXT NOT NULL,
+        iglesia TEXT NOT NULL,
+        ciudad TEXT NOT NULL,
+        pais TEXT DEFAULT 'México',
+        asociacion TEXT,
+        union_campo TEXT,
+        codigo_acceso TEXT,
+        ministerios TEXT DEFAULT 'gm',
+        plan TEXT DEFAULT 'gratis',
+        max_miembros INTEGER DEFAULT 20,
+        plan_expira TEXT,
+        activo INTEGER DEFAULT 1
+      )
+    ''');
+
+    // Insertar club por defecto
+    await db.execute('''
+      INSERT OR IGNORE INTO clubes (id, nombre, iglesia, ciudad, pais, codigo_acceso, ministerios, plan, max_miembros, activo)
+      VALUES ('doulos-montemorelos', 'Doulos', 'Iglesia Adventista Central', 'Montemorelos, NL', 'México', 'DOULOS2026', 'gm', 'gratis', 20, 1)
+    ''');
+
+    // Tabla de miembros (con campos auth + multi-tenant)
     await db.execute('''
       CREATE TABLE miembros(
         id TEXT PRIMARY KEY,
@@ -46,7 +71,10 @@ class DatabaseService {
         activo INTEGER DEFAULT 1,
         fecha_registro TEXT,
         usuario TEXT,
-        password_hash TEXT
+        password_hash TEXT,
+        club_id TEXT,
+        ministerio TEXT DEFAULT 'gm',
+        clase_ministerio TEXT
       )
     ''');
 
@@ -60,7 +88,9 @@ class DatabaseService {
         ubicacion TEXT,
         tipo TEXT NOT NULL,
         latitud REAL,
-        longitud REAL
+        longitud REAL,
+        club_id TEXT,
+        ministerio TEXT DEFAULT 'todos'
       )
     ''');
 
@@ -77,6 +107,7 @@ class DatabaseService {
         cuota INTEGER DEFAULT 0,
         registrado_por TEXT,
         fecha_registro TEXT,
+        club_id TEXT,
         FOREIGN KEY (unidad_id) REFERENCES unidades(id),
         FOREIGN KEY (miembro_id) REFERENCES miembros(id)
       )
@@ -161,7 +192,9 @@ class DatabaseService {
         nombre TEXT NOT NULL,
         descripcion TEXT,
         activo INTEGER DEFAULT 1,
-        fecha_creacion TEXT NOT NULL
+        fecha_creacion TEXT NOT NULL,
+        club_id TEXT,
+        ministerio TEXT DEFAULT 'gm'
       )
     ''');
 

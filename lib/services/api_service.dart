@@ -37,7 +37,7 @@ class ApiService {
     final response = await http.get(uri, headers: _headers);
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return List<Map<String, dynamic>>.from(body['data']);
   }
 
@@ -49,7 +49,7 @@ class ApiService {
     );
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return Map<String, dynamic>.from(body['data']);
   }
 
@@ -94,7 +94,7 @@ class ApiService {
     final response = await http.get(uri, headers: _headers);
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return List<Map<String, dynamic>>.from(body['data']);
   }
 
@@ -142,7 +142,7 @@ class ApiService {
     final response = await http.get(uri, headers: _headers);
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return List<Map<String, dynamic>>.from(body['data']);
   }
 
@@ -175,7 +175,7 @@ class ApiService {
     );
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return List<Map<String, dynamic>>.from(body['data']);
   }
 
@@ -186,7 +186,7 @@ class ApiService {
     );
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return Map<String, dynamic>.from(body['data']);
   }
 
@@ -221,7 +221,7 @@ class ApiService {
     if (response.statusCode == 401) return null;
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return Map<String, dynamic>.from(body['data']);
   }
 
@@ -252,7 +252,7 @@ class ApiService {
     );
     _checkResponse(response);
 
-    return Map<String, dynamic>.from(jsonDecode(response.body));
+    return Map<String, dynamic>.from(jsonDecode(utf8.decode(response.bodyBytes)));
   }
 
   /// Descargar todos los datos del backend
@@ -263,7 +263,7 @@ class ApiService {
     final response = await http.get(uri, headers: _headers);
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return Map<String, dynamic>.from(body['data']);
   }
 
@@ -283,7 +283,7 @@ class ApiService {
   /// Health check
   Future<Map<String, dynamic>> healthCheck() async {
     final response = await http.get(Uri.parse('$_baseUrl/health'));
-    return Map<String, dynamic>.from(jsonDecode(response.body));
+    return Map<String, dynamic>.from(jsonDecode(utf8.decode(response.bodyBytes)));
   }
 
   // ══════════════════════════════════════════
@@ -298,7 +298,7 @@ class ApiService {
     );
     if (response.statusCode == 404) return null;
     _checkResponse(response);
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return Map<String, dynamic>.from(body['data']);
   }
 
@@ -310,7 +310,7 @@ class ApiService {
     );
     if (response.statusCode == 404) return null;
     _checkResponse(response);
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return Map<String, dynamic>.from(body['data']);
   }
 
@@ -341,7 +341,7 @@ class ApiService {
       }),
     );
     _checkResponse(response);
-    return Map<String, dynamic>.from(jsonDecode(response.body));
+    return Map<String, dynamic>.from(jsonDecode(utf8.decode(response.bodyBytes)));
   }
 
   /// Solicitud de unión de miembro/consejero
@@ -377,7 +377,7 @@ class ApiService {
       }),
     );
     _checkResponse(response);
-    return Map<String, dynamic>.from(jsonDecode(response.body));
+    return Map<String, dynamic>.from(jsonDecode(utf8.decode(response.bodyBytes)));
   }
 
   /// Obtener solicitudes pendientes de aprobación
@@ -389,7 +389,7 @@ class ApiService {
     final response = await http.get(uri, headers: _headers);
     _checkResponse(response);
 
-    final body = jsonDecode(response.body);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
     return List<Map<String, dynamic>>.from(body['data']);
   }
 
@@ -419,7 +419,7 @@ class ApiService {
 
   void _checkResponse(http.Response response) {
     if (response.statusCode >= 400) {
-      final body = jsonDecode(response.body);
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
       throw ApiException(
         statusCode: response.statusCode,
         message: body['error'] ?? 'Error desconocido',

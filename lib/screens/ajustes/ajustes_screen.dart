@@ -460,7 +460,7 @@ class _AjustesScreenState extends State<AjustesScreen> {
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('¿Borrar todos los datos?'),
         content: const Text(
           'Esta acción eliminará todos los miembros, eventos, '
@@ -470,31 +470,29 @@ class _AjustesScreenState extends State<AjustesScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogCtx),
             child: const Text('Cancelar'),
           ),
           FilledButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogCtx);
+              if (!mounted) return;
+              final messenger = ScaffoldMessenger.of(context);
               _showLoadingDialog('Restaurando datos...');
               try {
                 await _db.resetDatabase();
-                if (mounted) {
-                  Navigator.pop(context); // dismiss loading
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Datos restaurados a valores de ejemplo'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                }
+                if (!mounted) return;
+                Navigator.of(context, rootNavigator: true).pop();
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Datos restaurados a valores de ejemplo'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
               } catch (e) {
-                if (mounted) {
-                  Navigator.pop(context); // dismiss loading
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
+                if (!mounted) return;
+                Navigator.of(context, rootNavigator: true).pop();
+                messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
               }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),

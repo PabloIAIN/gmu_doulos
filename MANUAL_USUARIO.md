@@ -1,529 +1,518 @@
-# Manual del Usuario - GMU Doulos
+# Manual de Usuario - GMU Doulos v2.0
 
-## Sistema de Gestion para Club de Guias Mayores
-
-**Version:** 1.1.0
-**Fecha:** Marzo 2026
+**Plataforma de gestion para clubes de Ministerios Juveniles Adventistas**
+*Division Interamericana*
 
 ---
 
-## Tabla de Contenidos
+## Tabla de contenido
 
-1. [Introduccion](#1-introduccion)
-2. [Requisitos del Sistema](#2-requisitos-del-sistema)
-3. [Instalacion](#3-instalacion)
-4. [Primer Uso](#4-primer-uso)
-5. [Inicio de Sesion](#5-inicio-de-sesion)
-6. [Pantalla Principal](#6-pantalla-principal)
-7. [Gestion de Miembros](#7-gestion-de-miembros)
-8. [Unidades](#8-unidades)
-9. [Asistencia](#9-asistencia)
-10. [Calendario de Eventos](#10-calendario-de-eventos)
-11. [Carpeta de Investidura](#11-carpeta-de-investidura)
-12. [Reportes PDF](#12-reportes-pdf)
-13. [Panel de Administracion](#13-panel-de-administracion)
-14. [Importar Miembros](#14-importar-miembros)
-15. [Ajustes](#15-ajustes)
-16. [Sincronizacion](#16-sincronizacion)
-17. [Solucion de Problemas](#17-solucion-de-problemas)
-
----
-
-## 1. Introduccion
-
-GMU Doulos es una aplicacion movil disenada para la gestion integral del Club de Guias Mayores "Doulos" de la Iglesia Adventista Central de Montemorelos, Nuevo Leon. La aplicacion permite administrar miembros, registrar asistencia, gestionar la carpeta de investidura, coordinar eventos y generar reportes.
-
-### Roles de Usuario
-
-La aplicacion cuenta con tres roles principales, cada uno con diferentes niveles de acceso:
-
-| Rol | Descripcion | Acceso |
-|-----|-------------|--------|
-| **Director (Admin)** | Administrador del club con acceso completo | Gestion de miembros, unidades, asistencia, eventos, carpeta, reportes, ajustes, sincronizacion |
-| **Consejero** | Lider de unidad | Gestion de su unidad, registro de asistencia, revision de carpeta de sus aspirantes |
-| **Aspirante** | Miembro del club en formacion | Visualizar su carpeta de investidura, calendario, manual |
+1. [¿Que es GMU Doulos?](#que-es-gmu-doulos)
+2. [Requisitos](#requisitos)
+3. [Instalacion](#instalacion)
+4. [Primer uso - Configurar tu club](#primer-uso)
+5. [Iniciar sesion](#iniciar-sesion)
+6. [Pantalla principal](#pantalla-principal)
+7. [Modulos por rol](#modulos-por-rol)
+8. [Gestion de Miembros](#gestion-de-miembros)
+9. [Unidades](#unidades)
+10. [Asistencia](#asistencia)
+11. [Calendario y Eventos](#calendario-y-eventos)
+12. [Carpeta de Investidura](#carpeta-de-investidura)
+13. [Reportes PDF](#reportes-pdf)
+14. [Panel de Administracion](#panel-de-administracion)
+15. [Solicitudes Pendientes](#solicitudes-pendientes)
+16. [Sincronizacion con el servidor](#sincronizacion)
+17. [Ajustes](#ajustes)
+18. [Preguntas frecuentes](#faq)
 
 ---
 
-## 2. Requisitos del Sistema
+## ¿Que es GMU Doulos?
 
-- Dispositivo Android version 5.0 (Lollipop) o superior
-- Espacio de almacenamiento: 100 MB minimo
-- Conexion a internet para sincronizacion de datos (la app funciona sin internet en modo offline)
+GMU Doulos es una aplicacion movil multiplataforma para gestionar **clubes de ministerios juveniles** de la Iglesia Adventista del Septimo Dia (Division Interamericana).
 
----
+**Soporta tres ministerios:**
+- **Guias Mayores (GM)** - jovenes 16+
+- **Conquistadores** - 10 a 15 años
+- **Aventureros** - 4 a 9 años
 
-## 3. Instalacion
-
-### Instalacion desde APK
-
-1. Transfiera el archivo `app-release.apk` a su dispositivo Android (por cable USB, WhatsApp, Google Drive, correo electronico, etc.)
-2. Abra el archivo APK en su dispositivo
-3. Si aparece un mensaje de "Fuentes desconocidas":
-   - Toque "Configuracion" o "Ajustes"
-   - Active la opcion "Permitir instalacion de fuentes desconocidas" para el explorador de archivos o la app desde donde esta abriendo el APK
-4. Toque "Instalar"
-5. Espere a que termine la instalacion
-6. Toque "Abrir" para iniciar la aplicacion
+**Caracteristicas principales:**
+- Gestion completa de miembros, unidades y asistencia
+- Calendario de eventos compartido
+- Carpeta de Investidura digital con flujo de aprobacion
+- Reportes PDF (lista, asistencia, carpeta individual)
+- Funciona **sin internet** (offline-first)
+- Sincronizacion automatica con servidor cuando hay conexion
+- Soporte para multiples clubes con codigo de acceso
 
 ---
 
-## 4. Primer Uso
+## Requisitos
 
-### Pantalla de Bienvenida (Onboarding)
-
-Al abrir la aplicacion por primera vez, se mostrara una pantalla de bienvenida con informacion sobre las funcionalidades principales. Deslice hacia la izquierda para navegar entre las paginas y toque "Comenzar" al finalizar.
-
-### Configuracion Inicial
-
-En el primer uso se le pedira crear la cuenta de Director (administrador):
-
-1. **Datos personales:**
-   - Ingrese su nombre completo
-   - Ingrese su apellido
-   - Seleccione su fecha de nacimiento
-   - Ingrese su telefono
-   - Ingrese su correo electronico
-
-2. **Credenciales de acceso:**
-   - Cree un nombre de usuario
-   - Cree una contrasena segura (minimo 6 caracteres)
-   - Confirme la contrasena
-
-3. Toque "Crear cuenta" para finalizar la configuracion
-
-**Nota:** Esta cuenta tendra el rol de Director con acceso completo. Las demas cuentas se crean desde el panel de administracion.
+- **Android 5.0 (Lollipop) o superior**
+- **50 MB de espacio libre**
+- Conexion a internet (solo para sincronizar - la app funciona offline)
+- Permisos de **Camara**, **Notificaciones** y **Almacenamiento**
 
 ---
 
-## 5. Inicio de Sesion
+## Instalacion
 
-1. Abra la aplicacion
-2. Ingrese su nombre de usuario
-3. Ingrese su contrasena
-4. Toque el boton "Iniciar Sesion"
+### Opcion A - Desde el APK directo
 
-**Nota sobre seguridad:** Despues de 5 intentos fallidos de inicio de sesion, la cuenta se bloqueara temporalmente por 30 segundos como medida de seguridad.
+1. Descarga el archivo `app-release.apk`
+2. En tu celular, ve a **Ajustes → Seguridad → Instalar de fuentes desconocidas** y permitelo
+3. Abre el APK y toca **Instalar**
+4. Listo. Aparece el icono de GMU Doulos
 
----
+### Opcion B - Desde Google Play (proximamente)
 
-## 6. Pantalla Principal
-
-La pantalla principal muestra un resumen del estado del club, personalizado segun el rol del usuario.
-
-### Vista del Director (Admin)
-
-- **Tarjetas de estadisticas:** Total de miembros, eventos proximos, porcentaje de asistencia, aprobaciones pendientes
-- **Acciones rapidas:** Botones de acceso directo a las funciones mas utilizadas
-- **Barra de navegacion inferior:** Inicio, Miembros, Calendario, Panel Admin
-
-### Vista del Consejero
-
-- **Tarjetas de estadisticas:** Miembros en su unidad, asistencia de la unidad
-- **Barra de navegacion inferior:** Inicio, Mi Unidad, Calendario, Manual
-
-### Vista del Aspirante
-
-- **Tarjetas de estadisticas:** Progreso de carpeta, proximos eventos
-- **Barra de navegacion inferior:** Inicio, Mi Carpeta, Calendario, Manual
-
-### Menu Lateral (Drawer)
-
-Deslice desde el borde izquierdo o toque el icono de menu para acceder al menu lateral con opciones adicionales como: Perfil, Estadisticas, Especialidades, Herramientas, Notificaciones, Ajustes y Cerrar Sesion.
+Estara disponible en Play Store en futura version.
 
 ---
 
-## 7. Gestion de Miembros
+## Primer uso
 
-*Disponible para: Director*
+Al abrir la app por primera vez veras una **introduccion de 4 paginas** explicando las funciones. Toca **Siguiente** hasta llegar al final y luego **Comenzar**.
 
-### Ver Lista de Miembros
+### Pantalla de Configuracion del Club
 
-1. Desde la pantalla principal, toque "Miembros" en la barra de navegacion inferior
-2. Se mostrara la lista completa de miembros activos
-3. Use la barra de busqueda para filtrar por nombre
-4. Use los filtros de clase o rol para refinar la busqueda
+Aqui hay 3 opciones segun tu situacion:
 
-### Agregar un Nuevo Miembro
+#### Soy Director (crear o entrar a un club como Director)
 
-1. En la pantalla de Miembros, toque el boton "+" (flotante en la esquina inferior derecha)
-2. Complete los campos requeridos:
-   - Nombre y apellido
-   - Telefono y correo electronico
+Si eres el **Director del club** y tienes un codigo de acceso:
+
+1. Toca la pestaña **"Soy Director"**
+2. Ingresa el **Codigo de Acceso** (ej: `DOULOS2026`, `LEONES2026`)
+3. Toca **Verificar Codigo**
+4. La app verifica el codigo y muestra los datos del club
+5. Si el club tiene varios ministerios (ej: GM + Conquistadores), elige cual diriges
+6. Llena tus datos: **Nombre**, **Apellido**, **Usuario**, **Contraseña**
+7. Toca **Crear Cuenta**
+8. Listo - eres el Director y entras a la app con todos los permisos
+
+> **Importante:** Solo puede haber **un Director por ministerio** en cada club. Si ya hay un Director GM en tu club, no puedes crear otro.
+
+#### Unirme (entrar a un club como miembro/consejero)
+
+Si quieres unirte a un club existente como **Consejero, Aspirante, Conquistador o Aventurero**:
+
+1. Toca la pestaña **"Unirme"**
+2. Ingresa el **Codigo del club** que te dio tu Director
+3. Toca **Buscar Club**
+4. Selecciona el ministerio al que perteneces (si el club tiene varios)
+5. Elige tu rol: **Miembro** o **Consejero**
+6. Si eres Conquistador o Aventurero, selecciona tu **clase actual** (Amigo, Compañero, Corderitos, etc.)
+7. Llena tus datos personales y crea contraseña
+8. Toca **Enviar Solicitud**
+9. Te aparece un mensaje: **"Solicitud enviada. El Director debe aprobarte"**
+10. Espera a que tu Director apruebe tu solicitud para poder entrar
+
+#### Info (¿como consigo un codigo?)
+
+Si no tienes codigo, esta pestaña te explica como obtenerlo:
+
+- Pidele el codigo a tu Director del club
+- Si tu club aun no esta registrado, el Director debe solicitarlo al administrador de GMU Doulos
+
+---
+
+## Iniciar sesion
+
+Una vez configurada tu cuenta, en futuros usos veras la pantalla de **Iniciar Sesion**:
+
+1. Ingresa tu **usuario** (ej: `juan.perez`)
+2. Ingresa tu **contraseña**
+3. Toca **Iniciar Sesion**
+
+**Funciones de seguridad:**
+- Maximo 5 intentos fallidos seguidos
+- Despues de 5 intentos, la cuenta se bloquea por **30 segundos**
+- Las contraseñas se guardan **encriptadas** con bcrypt
+
+**¿Olvidaste tu contraseña?**
+Solo el Director del club puede resetearla. Contactalo directamente.
+
+---
+
+## Pantalla principal
+
+Despues del login veras el **Inicio** con:
+
+- **Saludo personalizado** con tu nombre y rol
+- **Resumen del club:** total de miembros, eventos, asistencia promedio, unidades
+- **Solicitudes pendientes** (si eres Director)
+- **Proximos eventos** del calendario
+- **Avatar** que abre tu perfil al tocarlo
+- **Menu lateral** (≡) con todas las funciones
+
+Abajo tienes **4 pestañas** principales segun tu rol.
+
+---
+
+## Modulos por rol
+
+La app muestra diferente contenido segun el rol del usuario:
+
+### Director (todos los Directores)
+**Pestañas:** Inicio | Miembros | Calendario | Admin
+
+**Acceso completo a:**
+- Gestion de miembros, unidades y asistencia
+- Crear/editar eventos
+- Aprobar carpetas de investidura
+- Generar reportes PDF
+- Importar miembros desde Google Sheets
+- Aprobar solicitudes nuevas
+- Sincronizacion con backend
+- Configuracion del club
+
+### Consejero
+**Pestañas:** Inicio | Mi Unidad | Calendario | Manual
+
+**Puede:**
+- Ver y registrar asistencia de su unidad asignada
+- Ver carpetas de sus aspirantes
+- Pre-aprobar requisitos de carpeta (luego Director da aprobacion final)
+- Ver el calendario de eventos
+- Ver el manual del club
+
+### Aspirante / Miembro
+**Pestañas:** Inicio | Mi Carpeta | Calendario | Manual
+
+**Puede:**
+- Ver su propia carpeta de investidura
+- Marcar requisitos como completados
+- Enviar requisitos para revision del Consejero
+- Ver el calendario
+- Ver el manual
+
+---
+
+## Gestion de Miembros
+
+**Solo accesible para Directores.**
+
+### Ver lista de miembros
+
+1. Toca la pestaña **Miembros** (icono de personas)
+2. Veras la lista completa con foto, nombre, clase y rol
+3. Usa la **barra de busqueda** arriba para filtrar por nombre
+4. Usa los **filtros** para ver solo aspirantes, consejeros, etc.
+
+### Crear nuevo miembro
+
+1. En la pantalla de Miembros, toca el boton flotante **+**
+2. Llena los campos:
+   - Nombre y Apellido (obligatorios)
    - Fecha de nacimiento
-   - Clase (Guia Mayor Aspirante, Guia Mayor, etc.)
-   - Rol (Miembro, Consejero, Director, etc.)
-3. Opcionalmente, agregue una foto de perfil tocando el icono de camara
-4. Toque "Guardar"
+   - Telefono y Email
+   - Clase (Guia Mayor Aspirante, Avanzado, etc.)
+   - Rol (Aspirante, Consejero, Director)
+   - Foto (opcional, desde galeria o camara)
+3. Toca **Guardar**
 
-### Editar un Miembro
+### Editar miembro
 
-1. En la lista de miembros, toque sobre el miembro que desea editar
-2. Modifique los campos necesarios
-3. Toque "Guardar" para confirmar los cambios
+1. Toca el miembro en la lista
+2. Toca el icono de **lapiz** (editar)
+3. Modifica los campos
+4. Toca **Guardar**
 
-### Eliminar un Miembro
+### Eliminar miembro
 
-1. En la lista de miembros, deslice el miembro hacia la izquierda
-2. Confirme la eliminacion en el dialogo que aparece
+1. Desliza el miembro hacia la izquierda
+2. Confirma la eliminacion
 
-### Crear Cuenta de Acceso para un Miembro
-
-1. Desde el Panel de Administracion, toque "Gestion de Cuentas"
-2. Seleccione al miembro que necesita cuenta
-3. Asigne un nombre de usuario y contrasena
-4. El miembro podra iniciar sesion con esas credenciales
+> **Limite del plan Gratis:** maximo **20 miembros activos** por ministerio. Si llegas al limite, debes actualizar al Plan Pro.
 
 ---
 
-## 8. Unidades
+## Unidades
 
-*Disponible para: Director, Consejero*
+Las unidades son los grupos pequeños dentro del club (ej: "Aguilas", "Halcones", "Leones").
 
-Las unidades son los grupos en los que se organizan los miembros del club, cada una con consejeros asignados.
+### Crear unidad
 
-### Crear una Unidad (Director)
+1. Ve a **Admin → Unidades** (o desde el menu lateral)
+2. Toca **+ Nueva Unidad**
+3. Ingresa nombre y descripcion
+4. Toca **Crear**
 
-1. Desde el menu lateral, seleccione "Unidades"
-2. Toque el boton "+"
-3. Ingrese el nombre de la unidad y descripcion
-4. Toque "Guardar"
+### Asignar miembros a unidad
 
-### Asignar Miembros a una Unidad
+1. Toca la unidad
+2. Toca **+ Agregar Miembros**
+3. Selecciona los miembros (maximo **2 consejeros** y **12 aspirantes** por unidad)
+4. Toca **Asignar**
 
-1. Abra la unidad deseada
-2. Toque "Agregar miembro"
-3. Seleccione los miembros de la lista
-4. Para asignar un consejero, seleccione el miembro y cambie su rol en la unidad a "Consejero"
+### Eliminar unidad
 
-### Vista del Consejero
-
-Los consejeros veran unicamente su unidad asignada con la lista de aspirantes, pudiendo:
-- Ver los miembros de su unidad
-- Registrar asistencia de su unidad
-- Revisar el progreso de carpeta de sus aspirantes
+1. Desliza la unidad hacia la izquierda
+2. Confirma
 
 ---
 
-## 9. Asistencia
+## Asistencia
 
-*Disponible para: Director, Consejero*
+### Registrar asistencia
 
-### Registrar Asistencia
+1. Ve a **Admin → Asistencia** (o desde el menu del Director/Consejero)
+2. Selecciona la **unidad**
+3. Selecciona la **fecha** (solo sabados y domingos)
+4. Por cada miembro marca:
+   - **Puntualidad:** Presente, Tarde, Ausente
+   - **Pañoleta:** ¿la traia puesta?
+   - **Biblia:** ¿llevo Biblia?
+   - **Cuota:** ¿pago su cuota?
+5. Toca **Guardar**
 
-1. Desde el menu lateral, seleccione "Asistencia"
-2. Seleccione la unidad
-3. Seleccione la fecha
-4. Para cada miembro, marque los criterios que aplican:
-   - **Puntualidad:** El miembro llego a tiempo
-   - **Panoleta:** El miembro trajo su panoleta
-   - **Biblia:** El miembro trajo su Biblia
-   - **Cuota:** El miembro pago su cuota
-5. Los cambios se guardan automaticamente
+### Ver historial
 
-### Ver Historial de Asistencia
-
-1. Desde la pantalla de Asistencia, toque "Historial"
-2. Filtre por unidad, miembro o rango de fechas
-3. Visualice el porcentaje de asistencia por criterio
+- En la misma pantalla, toca **Historial** para ver asistencias anteriores
+- Puedes exportar la asistencia como **CSV** desde el menu
 
 ---
 
-## 10. Calendario de Eventos
+## Calendario y Eventos
 
-*Disponible para: Todos los roles*
+### Ver eventos
 
-### Ver Eventos
+1. Toca la pestaña **Calendario**
+2. Veras un calendario mensual
+3. Los dias con evento aparecen marcados
+4. Toca un dia para ver los eventos de ese dia
 
-1. Toque "Calendario" en la barra de navegacion inferior
-2. Los dias con eventos estaran marcados con un punto
-3. Toque un dia para ver los eventos de esa fecha
-4. Toque un evento para ver sus detalles
+### Crear evento (solo Director)
 
-### Crear un Evento (Director)
+1. Toca el boton flotante **+**
+2. Llena los datos:
+   - **Titulo** (ej: "Campamento de Verano")
+   - **Descripcion**
+   - **Fecha y hora**
+   - **Ubicacion**
+   - **Tipo:** Reunion, Campamento, Servicio, Salida, Especial, Aniversario
+3. Toca **Guardar**
 
-1. En el Calendario, toque el boton "+"
-2. Complete los campos:
-   - Titulo del evento
-   - Descripcion
-   - Fecha y hora
-   - Ubicacion
-   - Tipo (reunion, campamento, clase, ceremonia, actividad, servicio)
-3. Toque "Guardar"
+### Compartir evento
 
-### Editar o Eliminar un Evento
-
-1. Toque sobre el evento
-2. En la pantalla de detalle, toque el icono de edicion (lapiz) para editar o el icono de eliminar (papelera)
-3. Confirme la accion
+- Toca el evento → menu de tres puntos → **Exportar .ics**
+- El archivo se puede agregar a Google Calendar, Outlook, etc.
 
 ---
 
-## 11. Carpeta de Investidura
+## Carpeta de Investidura
 
-*Disponible para: Director, Consejero, Aspirante*
-
-La carpeta de investidura es el registro del progreso de cada aspirante en los requisitos necesarios para ser investido como Guia Mayor.
-
-### Estructura
-
-La carpeta se divide en secciones, y cada seccion contiene requisitos especificos que deben ser completados y aprobados.
-
-### Flujo de Trabajo
-
-El proceso de aprobacion sigue estos pasos:
-
-1. **Pendiente** - El requisito aun no ha sido completado
-2. **Enviado** - El aspirante marca el requisito como completado y lo envia para revision
-3. **Pre-aprobado** - El consejero revisa y pre-aprueba el requisito
-4. **Aprobado** - El director da la aprobacion final
-5. **Devuelto** - Si el requisito necesita correccion, puede ser devuelto con comentarios
+La Carpeta de Investidura es donde el aspirante registra su progreso en los requisitos oficiales de su clase.
 
 ### Para el Aspirante
 
-1. Toque "Mi Carpeta" en la barra de navegacion inferior
-2. Vera las secciones con su porcentaje de progreso
-3. Toque una seccion para ver sus requisitos
-4. Marque como completado cada requisito finalizado
-5. Suba evidencia si es requerido (fotos)
-6. Envie para revision
+1. Toca la pestaña **Mi Carpeta**
+2. Veras las **secciones** de tu clase (Espiritual, Denominacional, Educacion, Liderazgo, Especialidades, etc.)
+3. Toca una seccion para ver los requisitos
+4. Para cada requisito puedes:
+   - **Marcar como completado** (checkbox)
+   - **Agregar fecha** y **observaciones**
+   - **Subir evidencia** (foto o documento)
+5. Cuando completes un requisito, su estado cambia a **Pendiente de revision**
+6. Tu Consejero pre-aprueba y tu Director da la aprobacion final
+
+### Estados de un requisito
+
+- **Pendiente** - aun no completado
+- **Enviado** - completaste y enviaste para revision
+- **Pre-aprobado** - el Consejero lo reviso y aprobo
+- **Aprobado** - el Director lo aprobo definitivamente
+- **Devuelto** - hay observaciones, debes corregir
 
 ### Para el Consejero
 
-1. Desde "Mi Unidad", toque "Revisar Carpeta" de un aspirante
-2. Revise los requisitos enviados
-3. Pre-apruebe o devuelva con comentarios
+1. Ve a **Mi Unidad → Carpetas**
+2. Veras la lista de aspirantes
+3. Toca un aspirante para ver su carpeta
+4. Para cada requisito **Enviado**, puedes **Pre-aprobar** o **Devolver con comentarios**
 
 ### Para el Director
 
-1. Desde el Panel de Admin, toque "Carpeta - Aprobar"
-2. Revise los requisitos pre-aprobados
-3. De la aprobacion final o devuelva con observaciones
+1. Ve a **Admin → Carpetas → Aprobar**
+2. Veras todos los requisitos **Pre-aprobados**
+3. **Aprueba** definitivamente o **Devuelve con observaciones**
 
 ---
 
-## 12. Reportes PDF
+## Reportes PDF
 
-*Disponible para: Director*
+**Solo Directores.** Disponible solo en el Plan Pro.
 
-### Generar Reporte de Lista de Miembros
+### Tipos de reportes
 
-1. Desde el menu lateral, seleccione "Reportes"
-2. Toque "Lista de Miembros"
-3. Se generara un PDF con: nombre, email, telefono, rol y clase de todos los miembros activos
-4. Puede compartir o guardar el PDF
+1. **Lista de Miembros** - todos los miembros activos con datos completos
+2. **Reporte de Asistencia** - resumen por fecha y porcentajes
+3. **Carpeta de Investidura** - progreso individual de un aspirante
 
-### Generar Reporte de Asistencia
+### Generar un reporte
 
-1. En Reportes, toque "Reporte de Asistencia"
-2. Se generara un PDF con el resumen de asistencia por fecha y por unidad con porcentajes
-3. Puede compartir o guardar el PDF
-
-### Generar Reporte de Carpeta Individual
-
-1. En Reportes, toque "Carpeta de Investidura"
-2. Seleccione al aspirante del dialogo
-3. Se generara un PDF con el progreso completo del aspirante: informacion personal, resumen por seccion, y detalle de cada requisito con su estado
-4. Puede compartir o guardar el PDF
+1. Ve a **Admin → Reportes**
+2. Selecciona el tipo de reporte
+3. Si es Carpeta, selecciona el aspirante
+4. Toca **Generar PDF**
+5. El PDF se abre automaticamente
+6. Puedes **compartirlo** por WhatsApp, email, etc.
 
 ---
 
-## 13. Panel de Administracion
+## Panel de Administracion
 
-*Disponible para: Director*
+**Solo Directores.** Acceso desde la pestaña **Admin** o del menu lateral.
 
-El panel de administracion es el centro de control del club. Se accede desde la barra de navegacion inferior.
+El panel tiene una grilla con todas las funciones administrativas:
 
-### Estadisticas Generales
-
-En la parte superior se muestran tarjetas con:
-- Total de miembros activos
-- Eventos del mes
-- Porcentaje de asistencia general
-- Carpetas pendientes de aprobacion
-
-### Acciones Rapidas
-
-- **Gestion de Cuentas** - Crear y administrar cuentas de usuario
-- **Asistencia** - Ir directamente a registrar asistencia
-- **Unidades** - Administrar unidades del club
-- **Miembros** - Gestionar miembros
-- **Carpeta - Administrar** - Gestionar secciones y requisitos de la carpeta
-- **Carpeta - Aprobar** - Revisar y aprobar requisitos
-- **Importar Miembros** - Importar desde Google Sheets
-- **Reportes** - Generar reportes PDF
-- **Sincronizar Backend** - Sincronizar datos con el servidor
-- **Enviar Notificacion** - Enviar notificacion push a los miembros
+| Funcion | Para que sirve |
+|---------|----------------|
+| **Miembros** | Ver y gestionar todos los miembros |
+| **Unidades** | Gestionar unidades del club |
+| **Eventos** | Calendario completo |
+| **Asistencia** | Registrar asistencia |
+| **Gestionar Carpeta** | Configurar requisitos del club |
+| **Aprobar Carpetas** | Revisar requisitos enviados |
+| **Cuentas** | Gestionar usuarios y contraseñas |
+| **Importar Miembros** | Cargar miembros desde Google Sheets (CSV) |
+| **Solicitudes Pendientes** | Aprobar nuevos miembros que se unieron |
+| **Sincronizar Backend** | Subir/descargar datos del servidor |
+| **Enviar Aviso** | Mandar notificacion push a todos |
 
 ---
 
-## 14. Importar Miembros
+## Solicitudes Pendientes
 
-*Disponible para: Director*
+Cuando alguien se une al club desde **"Unirme"**, su cuenta queda **pendiente de aprobacion**.
 
-Esta funcion permite importar miembros masivamente desde un Google Sheet.
+### Aprobar o rechazar
 
-### Pasos para Importar
+1. Ve a **Admin → Solicitudes Pendientes**
+2. Veras la lista de personas que solicitaron unirse
+3. Cada tarjeta muestra: nombre, rol solicitado, ministerio, fecha
+4. **Aprobar:** la persona ya puede iniciar sesion
+5. **Rechazar:** se elimina la solicitud (irreversible)
 
-1. Desde el Panel de Admin, toque "Importar Miembros"
-2. En su celular, abra Google Sheets con los datos de inscripcion
-3. Seleccione todas las celdas incluyendo los encabezados
-4. Copie las celdas
-5. En la app, toque "Pegar desde portapapeles"
-6. La app detectara automaticamente las columnas
-7. Asigne cada columna del CSV al campo correspondiente (nombre, apellido, telefono, email)
-8. Seleccione el rol y clase por defecto para los nuevos miembros
-9. Revise el preview de los datos
-10. Toque "Importar" para crear los miembros
-
-**Nota:** Los miembros importados no tendran cuenta de acceso. Debera crear las cuentas individualmente desde Gestion de Cuentas si necesitan acceder a la app.
+> Si no hay solicitudes, veras un mensaje "No hay solicitudes pendientes"
 
 ---
 
-## 15. Ajustes
+## Sincronizacion
 
-*Disponible para: Todos los roles*
+GMU Doulos guarda todo **localmente primero** y luego sincroniza con el servidor. Esto significa que la app **funciona sin internet**.
 
-Acceda a Ajustes desde el menu lateral.
+### Sincronizacion automatica
 
-### Modo Oscuro
+- Al **abrir la app**: descarga datos del servidor
+- Despues de **crear/editar** algo: sube el cambio en background (3 segundos despues)
+- Si **no hay internet**: guarda local y sincroniza cuando vuelva la conexion
 
-- Active o desactive el modo oscuro con el interruptor
-- La preferencia se guarda automaticamente
+### Sincronizacion manual
+
+1. Ve a **Admin → Sincronizar Backend**
+2. Tienes 3 botones:
+   - **Subir datos** - sube todos tus datos locales al servidor
+   - **Descargar** - trae los datos del servidor (sobrescribe local)
+   - **Verificar conexion** - prueba que el servidor responda
+
+### Cuando usar sincronizacion manual
+
+- **Subir datos** despues de un periodo largo offline
+- **Descargar** si cambiaste de dispositivo y quieres traer todos los datos
+- **Verificar conexion** si la app se siente lenta o no carga datos
+
+---
+
+## Ajustes
+
+Accede al menu lateral (≡) → **Ajustes**.
+
+### Apariencia
+
+- **Modo oscuro** - cambia el tema de la app
 
 ### Notificaciones
 
-- Active o desactive las notificaciones push
-- Las notificaciones informan sobre nuevos eventos, recordatorios de asistencia y actualizaciones de carpeta
+- **Notificaciones** - activar/desactivar todas
+- **Sonido** - activar sonido de las notificaciones
+- **Recordatorios de eventos** - aviso 1 dia antes
 
-### Respaldo de Datos (Director)
+### Datos
 
-1. En Ajustes, toque "Respaldo de datos"
-2. **Crear respaldo:** Genera un archivo de respaldo de toda la base de datos local
-3. **Restaurar respaldo:** Seleccione un archivo de respaldo para restaurar los datos
+- **Backup de datos** - exporta todos tus datos a un archivo JSON
+- **Registro de actividad** - historial de cambios (audit log)
+- **Resumen de datos** - estadisticas locales
+- **Borrar todos los datos** - resetea la app a valores de ejemplo (irreversible)
 
-### Registro de Actividad (Director)
+### Acerca de
 
-1. En Ajustes, toque "Registro de actividad"
-2. Vera un historial de todas las acciones realizadas en la app
-3. Use los filtros para buscar por tipo de accion (crear, editar, eliminar) o por tabla
-
----
-
-## 16. Sincronizacion
-
-### Como Funciona el Modo Offline
-
-GMU Doulos utiliza una arquitectura "offline-first":
-
-- **Todos los datos se guardan primero en el dispositivo** (base de datos local SQLite)
-- **Automaticamente se sincronizan con el servidor** cuando hay conexion a internet
-- Si no hay internet, la app sigue funcionando con normalidad
-- Cuando se recupera la conexion, los datos pendientes se sincronizan automaticamente
-
-### Sincronizacion Manual
-
-Si necesita forzar una sincronizacion:
-
-1. Desde el Panel de Admin, toque "Sincronizar Backend"
-2. **Verificar conexion:** Comprueba que el servidor este disponible
-3. **Subir datos:** Envia todos los datos locales al servidor
-4. **Descargar:** Descarga los datos mas recientes del servidor al dispositivo
-
-### Uso en Multiples Dispositivos
-
-Gracias a la sincronizacion, multiples directivos y consejeros pueden usar la app en sus propios dispositivos:
-
-1. Instale la app en cada dispositivo
-2. Inicie sesion con la cuenta correspondiente
-3. Descargue los datos desde el servidor (Admin > Sincronizar > Descargar)
-4. Los cambios se sincronizaran automaticamente entre dispositivos
+- Version de la app
+- Desarrollador
 
 ---
 
-## 17. Solucion de Problemas
+## FAQ - Preguntas frecuentes
 
-### La app no inicia sesion
+### ¿Como invito a alguien a mi club?
 
-- Verifique que el nombre de usuario y contrasena sean correctos
-- Si la cuenta esta bloqueada por intentos fallidos, espere 30 segundos e intente de nuevo
-- Contacte al Director para que verifique que su cuenta existe
+Compartele el **codigo de tu club** (ej: `DOULOS2026`). Tu codigo lo encuentras en **Ajustes → Datos del club**. Esa persona debe instalar la app, ir a **"Unirme"**, ingresar el codigo y solicitar unirse. Tu apruebas su solicitud desde **Admin → Solicitudes Pendientes**.
 
-### No se muestran los datos
+### Soy Aspirante. ¿Puedo ver la lista de todos los miembros?
 
-- Verifique su conexion a internet
-- Vaya a Admin > Sincronizar Backend > Descargar para obtener los datos mas recientes
-- Si es la primera vez, pida al Director que sincronice los datos
+No. Como Aspirante solo ves **tu propia carpeta** y el calendario. Para ver miembros necesitas ser Director o Consejero.
 
-### Error al generar reportes PDF
+### ¿Que pasa si me equivoco al registrar asistencia?
 
-- Asegurese de que haya datos suficientes (miembros registrados, asistencia tomada)
-- Para el reporte de carpeta, seleccione un aspirante que tenga secciones y requisitos configurados
+Puedes editarla en cualquier momento desde **Admin → Asistencia → Historial**. Selecciona la fecha y la unidad para corregir.
 
-### La sincronizacion falla
+### ¿Puedo usar la app sin internet?
 
-- Verifique su conexion a internet
-- Toque "Verificar conexion" primero para asegurarse de que el servidor este disponible
-- Si el servidor no responde, intente mas tarde
+Si. La app esta diseñada **offline-first**. Todo se guarda local y sincroniza cuando hay internet.
 
-### No recibo notificaciones
+### ¿Como recupero mi contraseña?
 
-- Verifique que las notificaciones esten activadas en Ajustes dentro de la app
-- Verifique que los permisos de notificacion de la app esten activados en la configuracion de su dispositivo Android
-- Asegurese de tener conexion a internet
+Solo el **Director de tu club** puede resetear tu contraseña. Contactalo directamente.
 
-### La app se ve en blanco o se congela
+### Olvide mi codigo de club. ¿Donde lo veo?
 
-- Cierre la app completamente y vuelva a abrirla
-- Si persiste, desinstale y reinstale la app (los datos del servidor no se pierden)
+Si eres Director, ve a **Ajustes → Datos del club → Codigo de acceso**.
 
-### No puedo instalar el APK
+### ¿Puedo tener varios clubes en una sola cuenta?
 
-- Asegurese de haber habilitado "Fuentes desconocidas" en la configuracion de seguridad de su dispositivo
-- Verifique que tenga suficiente espacio de almacenamiento
-- Si su dispositivo es muy antiguo, verifique que tenga Android 5.0 o superior
+Por ahora **no**. Cada cuenta pertenece a un solo club. Si necesitas administrar varios, debes crear una cuenta diferente para cada uno.
 
-### Los datos no se ven en otro dispositivo
+### ¿La app funciona en iPhone?
 
-- Desde el dispositivo original: Admin > Sincronizar > Subir datos
-- Desde el nuevo dispositivo: Admin > Sincronizar > Descargar
+Por ahora solo **Android**. La version iOS esta planeada para futuro.
 
-### Error "No autorizado"
+### ¿Cuantos miembros puede tener mi club?
 
-- Su sesion puede haber expirado. Cierre sesion e inicie de nuevo
-- Verifique que su cuenta tenga los permisos necesarios para la accion que intenta realizar
+- **Plan Gratis:** maximo **20 miembros activos** por ministerio
+- **Plan Pro:** miembros ilimitados
 
-### Como contactar soporte
+### ¿Como activo el Plan Pro?
 
-Para reportar problemas tecnicos o solicitar ayuda, contacte al administrador del sistema o al desarrollador de la aplicacion.
+Ve a **Ajustes → Plan del Club → Actualizar a Pro**. Te muestra las instrucciones para contactar al administrador.
+
+### ¿Mis datos estan seguros?
+
+Si:
+- Las contraseñas se encriptan con **bcrypt**
+- La comunicacion con el servidor usa **HTTPS**
+- El servidor tiene **rate limiting** (max 30 peticiones por minuto)
+- Cada club ve **solo sus propios datos** (multi-tenant aislado)
 
 ---
 
-## Apendice: Tabla de Permisos por Rol
+## Soporte tecnico
 
-| Funcionalidad | Director | Consejero | Aspirante |
-|---------------|----------|-----------|-----------|
-| Ver dashboard | Si | Si | Si |
-| Gestionar miembros | Si | No | No |
-| Crear cuentas | Si | No | No |
-| Gestionar unidades | Si | No | No |
-| Registrar asistencia | Si | Solo su unidad | No |
-| Ver historial asistencia | Si | Solo su unidad | Solo la propia |
-| Crear eventos | Si | No | No |
-| Ver calendario | Si | Si | Si |
-| Administrar carpeta | Si | No | No |
-| Aprobar requisitos | Si | No | No |
-| Pre-aprobar requisitos | No | Si | No |
-| Completar requisitos | No | No | Si |
-| Generar reportes PDF | Si | No | No |
-| Importar miembros | Si | No | No |
-| Sincronizar backend | Si | No | No |
-| Respaldo de datos | Si | No | No |
-| Ver audit log | Si | No | No |
-| Cambiar modo oscuro | Si | Si | Si |
-| Editar perfil | Si | Si | Si |
-| Enviar notificaciones | Si | No | No |
+Si encuentras un bug o tienes una sugerencia:
+- Reporta en GitHub: https://github.com/PabloIAIN/gmu_doulos/issues
+- Contacta al desarrollador: Pablo Garza
 
----
-
-*GMU Doulos v1.1.0 - Club de Guias Mayores "Doulos" - Montemorelos, Nuevo Leon*
+**Version del manual:** 2.0
+**Ultima actualizacion:** 2026

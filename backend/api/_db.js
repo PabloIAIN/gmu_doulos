@@ -122,6 +122,24 @@ async function initDatabase() {
     )
   `;
 
+  // ── Tabla anuncios (comunicacion) ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS anuncios (
+      id TEXT PRIMARY KEY,
+      club_id TEXT NOT NULL,
+      ministerio TEXT DEFAULT 'todos',
+      titulo TEXT NOT NULL,
+      contenido TEXT NOT NULL,
+      autor_id TEXT,
+      autor_nombre TEXT,
+      tipo TEXT DEFAULT 'general',
+      fecha_publicacion TEXT NOT NULL,
+      activo INTEGER DEFAULT 1
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_anuncios_club ON anuncios(club_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_anuncios_fecha ON anuncios(fecha_publicacion DESC)`;
+
   // ── Tabla clubes ──
   await sql`
     CREATE TABLE IF NOT EXISTS clubes (

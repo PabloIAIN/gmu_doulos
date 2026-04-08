@@ -13,6 +13,7 @@ import 'screens/ajustes/ajustes_screen.dart';
 import 'screens/notificaciones/notificaciones_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/onboarding/club_setup_screen.dart';
+import 'screens/anuncios/anuncios_screen.dart';
 import 'screens/unidades/unidades_screen.dart';
 import 'screens/unidades/consejero_unidad_screen.dart';
 import 'screens/carpeta/carpeta_screen.dart';
@@ -486,8 +487,10 @@ class _MainNavigationState extends State<MainNavigation> {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                // ── Comunes: Inicio y Busqueda ──
+                // ── Comunes: Inicio, Anuncios y Busqueda ──
                 _drawerItem(Icons.home_rounded, 'Inicio', () => _goTab(0)),
+                _drawerItem(Icons.campaign_rounded, 'Anuncios',
+                    () => _pushScreen(const AnunciosScreen())),
                 _drawerItem(Icons.search_rounded, 'Buscar',
                     () => _pushScreen(const BusquedaScreen())),
 

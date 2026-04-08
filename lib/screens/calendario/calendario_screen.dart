@@ -434,6 +434,19 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
     return months[month - 1];
   }
 
+  void _compartirEvento(Evento evento) {
+    final fecha = '${evento.fecha.day}/${evento.fecha.month}/${evento.fecha.year}';
+    final texto = '''📅 ${evento.titulo}
+
+🗓️ $fecha a las ${evento.hora}
+📍 ${evento.ubicacion}
+
+${evento.descripcion}
+
+Compartido desde ${AppConfig.appName}''';
+    Share.share(texto, subject: evento.titulo);
+  }
+
   void _showEventoDetail(Evento evento) {
     showModalBottomSheet(
       context: context,
@@ -530,7 +543,22 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                         : '${evento.diasRestantes} días',
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            // Boton de compartir (todos los roles)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _compartirEvento(evento),
+                icon: const Icon(Icons.share),
+                label: const Text('Compartir evento'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryGreen,
+                  side: const BorderSide(color: AppTheme.primaryGreen),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             if (_auth.isAdmin)
               Row(
                 children: [

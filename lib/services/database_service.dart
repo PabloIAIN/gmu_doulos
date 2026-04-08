@@ -24,13 +24,29 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), AppConfig.databaseName);
     return await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
+    // Tabla anuncios (comunicacion)
+    await db.execute('''
+      CREATE TABLE anuncios(
+        id TEXT PRIMARY KEY,
+        club_id TEXT NOT NULL,
+        ministerio TEXT DEFAULT 'todos',
+        titulo TEXT NOT NULL,
+        contenido TEXT NOT NULL,
+        autor_id TEXT,
+        autor_nombre TEXT,
+        tipo TEXT DEFAULT 'general',
+        fecha_publicacion TEXT NOT NULL,
+        activo INTEGER DEFAULT 1
+      )
+    ''');
+
     // Tabla clubes (multi-tenant)
     await db.execute('''
       CREATE TABLE clubes(
@@ -412,6 +428,22 @@ class DatabaseService {
           usuario_id TEXT,
           usuario_nombre TEXT,
           fecha TEXT NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 11) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS anuncios(
+          id TEXT PRIMARY KEY,
+          club_id TEXT NOT NULL,
+          ministerio TEXT DEFAULT 'todos',
+          titulo TEXT NOT NULL,
+          contenido TEXT NOT NULL,
+          autor_id TEXT,
+          autor_nombre TEXT,
+          tipo TEXT DEFAULT 'general',
+          fecha_publicacion TEXT NOT NULL,
+          activo INTEGER DEFAULT 1
         )
       ''');
     }
@@ -1560,6 +1592,33 @@ class DatabaseService {
     final db = await database;
     final result = await db.query('configuracion');
     return {for (var r in result) r['clave'] as String: r['valor'] as String};
+  }
+
+  // ==================== ANUNCIOS ====================
+
+  Future<List<Map<String, dynamic>>> getAnuncios({String? clubId, int? limit}) async {
+    final db = await database;
+    final where = clubId != null ? 'club_id = ? AND activo = 1' : 'activo = 1';
+    final args = clubId != null ? [clubId] : <Object?>[];
+    return db.query(
+      'anuncios',
+      where: where,
+      whereArgs: args,
+      orderBy: 'fecha_publicacion DESC',
+      limit: limit,
+    );
+  }
+
+  Future<void> insertAnuncio(Map<String, dynamic> anuncio) async {
+    final db = await database;
+    await db.insert('anuncios', anuncio, conflictAlgorithm: ConflictAlgorithm.replace);
+    SyncManager().syncEnBackground();
+  }
+
+  Future<void> deleteAnuncio(String id) async {
+    final db = await database;
+    await db.update('anuncios', {'activo': 0}, where: 'id = ?', whereArgs: [id]);
+    SyncManager().syncEnBackground();
   }
 
   // ==================== CLUBES ====================

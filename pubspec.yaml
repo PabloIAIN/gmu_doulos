@@ -28,7 +28,7 @@ dependencies:
   
   # Compartir e Intents (Unidad III)
   # share_plus: ^7.2.1
-  # url_launcher: ^6.2.1
+  url_launcher: ^6.2.1
   
   # Cámara (Unidad IV)
   # camera: ^0.10.5+5

@@ -7,8 +7,8 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      const { miembros, eventos, unidades, unidad_miembros, asistencia, club_id } = req.body;
-      const resultados = { miembros: 0, eventos: 0, unidades: 0, unidad_miembros: 0, asistencia: 0 };
+      const { miembros, eventos, unidades, unidad_miembros, asistencia, anuncios, club_id } = req.body;
+      const resultados = { miembros: 0, eventos: 0, unidades: 0, unidad_miembros: 0, asistencia: 0, anuncios: 0 };
 
       if (miembros && Array.isArray(miembros)) {
         for (const m of miembros) {
@@ -58,12 +58,22 @@ module.exports = async (req, res) => {
         }
       }
 
+      if (anuncios && Array.isArray(anuncios)) {
+        for (const a of anuncios) {
+          await sql`
+            INSERT INTO anuncios (id,club_id,ministerio,titulo,contenido,autor_id,autor_nombre,tipo,fecha_publicacion,activo)
+            VALUES (${a.id},${a.club_id||club_id||null},${a.ministerio||'todos'},${a.titulo},${a.contenido},${a.autor_id||null},${a.autor_nombre||null},${a.tipo||'general'},${a.fecha_publicacion||new Date().toISOString()},${a.activo!==undefined?a.activo:1})
+            ON CONFLICT (id) DO UPDATE SET titulo=EXCLUDED.titulo,contenido=EXCLUDED.contenido,tipo=EXCLUDED.tipo,activo=EXCLUDED.activo`;
+          resultados.anuncios++;
+        }
+      }
+
       return res.status(200).json({ ok: true, sincronizados: resultados });
     }
 
     if (req.method === 'GET') {
       const { club_id, ministerio } = req.query;
-      let miembros, eventos, unidades, unidad_miembros, asistencia;
+      let miembros, eventos, unidades, unidad_miembros, asistencia, anuncios;
 
       if (club_id) {
         miembros = await sql`SELECT * FROM miembros WHERE club_id = ${club_id} ORDER BY nombre`;
@@ -76,16 +86,18 @@ module.exports = async (req, res) => {
           unidad_miembros = [];
         }
         asistencia = await sql`SELECT * FROM asistencia WHERE club_id = ${club_id} ORDER BY fecha DESC`;
+        anuncios = await sql`SELECT * FROM anuncios WHERE club_id = ${club_id} AND activo = 1 ORDER BY fecha_publicacion DESC`;
       } else {
         miembros = await sql`SELECT * FROM miembros ORDER BY nombre`;
         eventos = await sql`SELECT * FROM eventos ORDER BY fecha DESC`;
         unidades = await sql`SELECT * FROM unidades ORDER BY nombre`;
         unidad_miembros = await sql`SELECT * FROM unidad_miembros`;
         asistencia = await sql`SELECT * FROM asistencia ORDER BY fecha DESC`;
+        anuncios = await sql`SELECT * FROM anuncios WHERE activo = 1 ORDER BY fecha_publicacion DESC`;
       }
 
       return res.status(200).json({
-        data: { miembros, eventos, unidades, unidad_miembros, asistencia },
+        data: { miembros, eventos, unidades, unidad_miembros, asistencia, anuncios },
         timestamp: new Date().toISOString(),
       });
     }

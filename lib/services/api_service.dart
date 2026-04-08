@@ -236,6 +236,7 @@ class ApiService {
     List<Map<String, dynamic>>? unidades,
     List<Map<String, dynamic>>? unidadMiembros,
     List<Map<String, dynamic>>? asistencia,
+    List<Map<String, dynamic>>? anuncios,
     String? clubId,
   }) async {
     final response = await http.post(
@@ -247,6 +248,7 @@ class ApiService {
         if (unidades != null) 'unidades': unidades,
         if (unidadMiembros != null) 'unidad_miembros': unidadMiembros,
         if (asistencia != null) 'asistencia': asistencia,
+        if (anuncios != null) 'anuncios': anuncios,
         if (clubId != null) 'club_id': clubId,
       }),
     );

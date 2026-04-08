@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/miembro.dart';
 import '../../services/database_service.dart';
 import '../../widgets/user_avatar.dart';
+import '../../widgets/contacto_rapido.dart';
 import '../asistencia/historial_asistencia_screen.dart';
 
 class MiembrosScreen extends StatefulWidget {
@@ -454,7 +455,15 @@ class _MiembrosScreenState extends State<MiembrosScreen> {
               _buildDetailRow(Icons.cake, 'Edad', '${miembro.edad} años'),
               _buildDetailRow(Icons.phone, 'Teléfono', miembro.telefono),
               _buildDetailRow(Icons.email, 'Email', miembro.email),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              const Divider(),
+              ContactoRapido(
+                telefono: miembro.telefono,
+                email: miembro.email,
+                nombre: miembro.nombre,
+              ),
+              const Divider(),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(

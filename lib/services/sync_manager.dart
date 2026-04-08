@@ -55,6 +55,8 @@ class SyncManager {
       final unidades = await db.query('unidades');
       final unidadMiembros = await db.query('unidad_miembros');
       final asistencia = await db.query('asistencia');
+      List<Map<String, dynamic>> anuncios = [];
+      try { anuncios = await db.query('anuncios'); } catch (_) {}
 
       await _api.syncSubir(
         miembros: miembros,
@@ -62,6 +64,7 @@ class SyncManager {
         unidades: unidades,
         unidadMiembros: unidadMiembros,
         asistencia: asistencia,
+        anuncios: anuncios,
         clubId: _clubId,
       );
 
@@ -91,6 +94,7 @@ class SyncManager {
   static const _unidadCols = ['id','nombre','descripcion','activo','fecha_creacion','club_id','ministerio'];
   static const _umCols = ['id','unidad_id','miembro_id','rol_en_unidad','fecha_asignacion'];
   static const _asistCols = ['id','unidad_id','miembro_id','fecha','dia_semana','puntualidad','panoleta','biblia','cuota','registrado_por','fecha_registro','club_id'];
+  static const _anuncioCols = ['id','club_id','ministerio','titulo','contenido','autor_id','autor_nombre','tipo','fecha_publicacion','activo'];
 
   /// Descargar datos del servidor y actualizar local
   Future<void> descargarDatos() async {
@@ -135,6 +139,15 @@ class SyncManager {
           final clean = _cleanForLocal(Map<String, dynamic>.from(a), _asistCols);
           await db.insert('asistencia', clean, conflictAlgorithm: ConflictAlgorithm.replace);
         }
+      }
+
+      if (data['anuncios'] != null) {
+        try {
+          for (final a in data['anuncios']) {
+            final clean = _cleanForLocal(Map<String, dynamic>.from(a), _anuncioCols);
+            await db.insert('anuncios', clean, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        } catch (_) {}
       }
 
       _syncController.add(SyncStatus.success);

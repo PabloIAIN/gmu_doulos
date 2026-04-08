@@ -112,6 +112,8 @@ GMU Doulos es una plataforma **offline-first multi-tenant** que combina:
 | **Push notifs** | firebase_messaging | 15.2.10 |
 | **Notifs locales** | flutter_local_notifications | 18.0.1 |
 | **Compartir** | share_plus | 10.1.4 |
+| **Compartir** | share_plus | 10.1.4 |
+| **URL launcher** | url_launcher | 6.2.1 |
 | **Backend runtime** | Node.js | 20.x |
 | **Backend host** | Vercel Serverless | - |
 | **DB cloud** | PostgreSQL (Neon) | 16 |
@@ -160,6 +162,8 @@ gmu_doulos/
 |   |   +-- notification_service.dart
 |   |   +-- pdf_service.dart
 |   +-- screens/                  # 30+ pantallas por modulo
+|   |   +-- anuncios/
+|   |   |   +-- anuncios_screen.dart     # NEW: tablero/feed
 |   |   +-- onboarding/
 |   |   |   +-- onboarding_screen.dart
 |   |   |   +-- club_setup_screen.dart   # NEW v2: 3 flujos
@@ -177,6 +181,7 @@ gmu_doulos/
 |   |   |   +-- plan_screen.dart         # NEW v2: Freemium
 |   |   +-- (miembros, unidades, calendario, carpeta, reportes, etc.)
 |   +-- widgets/                  # Componentes reutilizables
+|       +-- contacto_rapido.dart  # NEW: llamar/whatsapp/email
 |
 +-- android/
 |   +-- app/
@@ -644,6 +649,110 @@ auth.ministerioActivo  // 'gm' | 'conq' | 'av' | 'todos'
 ### Compatibilidad legacy
 
 Roles antiguos (`Director`, `Consejero`, `Miembro` sin sufijo de ministerio) se mapean automaticamente al ministerio `gm` para no romper datos existentes.
+
+---
+
+## Modulo de comunicacion social
+
+### Tablero de Anuncios
+
+**Backend:**
+- Tabla `anuncios` con `club_id` para multi-tenancy
+- Sin endpoint dedicado: se sincroniza via `/api/sync`
+- Indices: `idx_anuncios_club`, `idx_anuncios_fecha` (DESC)
+
+**Flutter:**
+- `lib/screens/anuncios/anuncios_screen.dart` - Feed UI con tarjetas
+- `DatabaseService.getAnuncios(clubId)` - Lista anuncios activos
+- `DatabaseService.insertAnuncio(map)` - Inserta y dispara sync
+- `DatabaseService.deleteAnuncio(id)` - Soft delete (`activo = 0`)
+
+**Tipos de anuncio:**
+
+```dart
+'general'    // Verde - default
+'urgente'    // Rojo - prioridad alta
+'evento'     // Azul - relacionado con calendario
+'devocional' // Morado - mensaje espiritual
+```
+
+### Compartir a redes sociales
+
+Usa el paquete `share_plus` (cross-platform):
+
+```dart
+import 'package:share_plus/share_plus.dart';
+
+// Compartir texto plano
+Share.share('texto a compartir', subject: 'asunto opcional');
+
+// Compartir archivo
+Share.shareXFiles([XFile(path)], text: 'mensaje');
+```
+
+**Implementado en:**
+- `calendario_screen.dart::_compartirEvento()` - texto formateado con emojis
+- `anuncios_screen.dart::_compartir()` - anuncio con autor
+- Calendario completo como `.ics`
+
+### Contacto rapido (url_launcher)
+
+Widget reutilizable `lib/widgets/contacto_rapido.dart`:
+
+```dart
+ContactoRapido(
+  telefono: miembro.telefono,
+  email: miembro.email,
+  nombre: miembro.nombre,
+)
+```
+
+**URI schemes utilizados:**
+
+```dart
+// Llamar
+Uri(scheme: 'tel', path: '+528121234567')
+
+// WhatsApp (con mensaje pre-rellenado)
+Uri.parse('https://wa.me/528121234567?text=Hola%20Juan,')
+
+// Email
+Uri(scheme: 'mailto', path: 'usuario@email.com')
+```
+
+**Permisos en AndroidManifest.xml:**
+
+Para Android 11+, agregar queries para permitir abrir apps externas:
+
+```xml
+<queries>
+  <intent>
+    <action android:name="android.intent.action.VIEW" />
+    <data android:scheme="tel" />
+  </intent>
+  <intent>
+    <action android:name="android.intent.action.VIEW" />
+    <data android:scheme="https" />
+  </intent>
+  <intent>
+    <action android:name="android.intent.action.SENDTO" />
+    <data android:scheme="mailto" />
+  </intent>
+</queries>
+```
+
+### Notificaciones push
+
+Ya documentado en seccion anterior. Para enviar una notificacion desde el backend:
+
+```javascript
+// POST /api/send-notification
+{
+  "topic": "todos",  // o "admin", "consejero", "aspirante"
+  "title": "Nuevo anuncio",
+  "body": "El director publico un anuncio importante"
+}
+```
 
 ---
 

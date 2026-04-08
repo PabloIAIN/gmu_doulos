@@ -22,9 +22,11 @@
 13. [Reportes PDF](#reportes-pdf)
 14. [Panel de Administracion](#panel-de-administracion)
 15. [Solicitudes Pendientes](#solicitudes-pendientes)
-16. [Sincronizacion con el servidor](#sincronizacion)
-17. [Ajustes](#ajustes)
-18. [Preguntas frecuentes](#faq)
+16. [Tablero de Anuncios](#tablero-de-anuncios)
+17. [Contacto rapido y compartir](#contacto-rapido-y-compartir)
+18. [Sincronizacion con el servidor](#sincronizacion)
+19. [Ajustes](#ajustes)
+20. [Preguntas frecuentes](#faq)
 
 ---
 
@@ -39,9 +41,13 @@ GMU Doulos es una aplicacion movil multiplataforma para gestionar **clubes de mi
 
 **Caracteristicas principales:**
 - Gestion completa de miembros, unidades y asistencia
-- Calendario de eventos compartido
+- Calendario de eventos compartido con boton para compartir a redes sociales
 - Carpeta de Investidura digital con flujo de aprobacion
 - Reportes PDF (lista, asistencia, carpeta individual)
+- **Tablero de Anuncios** para que el Director publique avisos al club
+- **Contacto rapido** a miembros (llamar, WhatsApp, email) en un toque
+- **Compartir** eventos y anuncios a WhatsApp, Facebook, email, etc.
+- Notificaciones push con Firebase Cloud Messaging
 - Funciona **sin internet** (offline-first)
 - Sincronizacion automatica con servidor cuando hay conexion
 - Soporte para multiples clubes con codigo de acceso
@@ -401,6 +407,123 @@ Cuando alguien se une al club desde **"Unirme"**, su cuenta queda **pendiente de
 
 ---
 
+## Tablero de Anuncios
+
+El **Tablero de Anuncios** funciona como un mini feed estilo red social donde el Director publica avisos y todos los miembros del club los ven en tiempo real.
+
+### Acceder a los anuncios
+
+1. Abre el **menu lateral** (icono ≡ arriba a la izquierda)
+2. Toca **Anuncios**
+3. Veras la lista de todos los anuncios publicados, ordenados del mas reciente al mas antiguo
+
+### Tipos de anuncio
+
+Cada anuncio tiene un tipo con su color e icono distintivo:
+
+| Tipo | Icono | Color | Uso |
+|------|-------|-------|-----|
+| **General** | Megafono | Verde | Avisos generales del club |
+| **Urgente** | Exclamacion | Rojo | Cosas importantes que requieren atencion |
+| **Evento** | Calendario | Azul | Recordatorios de actividades proximas |
+| **Devocional** | Libro | Morado | Mensaje espiritual o reflexion |
+
+### Publicar un anuncio (solo Director)
+
+1. En la pantalla de Anuncios, toca el boton **Publicar** (esquina inferior derecha)
+2. Llena el formulario:
+   - **Titulo** (corto, hasta 80 caracteres)
+   - **Contenido** (el mensaje completo)
+   - **Tipo** (General / Urgente / Evento / Devocional)
+3. Toca **Publicar**
+4. El anuncio aparece inmediatamente para todos los miembros del club
+5. Se sincroniza con el servidor en background
+
+### Compartir un anuncio
+
+Cualquier miembro puede compartir un anuncio:
+
+1. En cada tarjeta de anuncio toca el icono de **compartir** (parte superior derecha)
+2. Elige a donde compartirlo: WhatsApp, Telegram, Facebook, email, etc.
+3. El anuncio se comparte como texto formateado con el autor
+
+### Eliminar anuncios (solo Director)
+
+1. En el anuncio toca los **3 puntos** (menu)
+2. Toca **Eliminar**
+3. Confirma
+
+> Los anuncios eliminados no se borran completamente, solo se ocultan (se marcan como inactivos por seguridad de auditoria).
+
+---
+
+## Contacto rapido y compartir
+
+GMU Doulos integra varias funciones de comunicacion directa para que te conectes con tus miembros sin salir de la app.
+
+### Contacto rapido a miembros
+
+En la pantalla de detalle de cualquier miembro veras 3 botones de contacto:
+
+1. **Llamar** (verde, telefono)
+   - Abre la app de telefono con el numero pre-marcado
+   - Solo necesitas tocar el boton de llamar
+
+2. **WhatsApp** (verde WhatsApp, chat)
+   - Abre WhatsApp con el numero del miembro
+   - Mensaje pre-rellenado: "Hola [Nombre],"
+   - Listo para enviar
+
+3. **Email** (azul, sobre)
+   - Abre tu cliente de correo
+   - Con el destinatario ya configurado
+
+### Como usarlo
+
+1. Ve a **Miembros** (solo Director) o busca al miembro en la pantalla de **Buscar**
+2. Toca al miembro para ver su detalle
+3. Veras los 3 botones de contacto debajo de los datos
+4. Toca el que necesites
+
+> **Nota:** Los botones solo aparecen si el miembro tiene el dato correspondiente registrado. Si no tiene email, el boton de Email no aparece.
+
+### Compartir eventos
+
+Cualquier miembro puede compartir un evento del calendario a sus redes sociales:
+
+1. Ve a la pestaña **Calendario**
+2. Toca un evento para ver su detalle
+3. Toca el boton **Compartir evento**
+4. Elige donde compartirlo (WhatsApp, Facebook, etc.)
+
+El texto que se comparte incluye:
+- 📅 Titulo del evento
+- 🗓️ Fecha y hora
+- 📍 Ubicacion
+- Descripcion completa
+- Mencion a GMU Doulos
+
+### Compartir el calendario completo
+
+1. En **Calendario**, toca el icono de **descargar** (arriba)
+2. Se genera un archivo `.ics` con todos los eventos
+3. Se abre el menu para compartirlo o guardarlo
+4. Quien lo reciba puede importarlo a Google Calendar, Outlook, Apple Calendar, etc.
+
+### Notificaciones push
+
+GMU Doulos usa Firebase Cloud Messaging para enviar notificaciones a los celulares de los miembros:
+
+- **Anuncios urgentes** llegan como notificacion push
+- **Recordatorios de eventos** un dia antes
+- **Aprobacion de tu carpeta** te llega en tiempo real
+- **Nueva solicitud de unirse** le llega al Director
+
+Para activar/desactivar:
+- **Ajustes → Notificaciones → Recibir alertas del club**
+
+---
+
 ## Sincronizacion
 
 GMU Doulos guarda todo **localmente primero** y luego sincroniza con el servidor. Esto significa que la app **funciona sin internet**.
@@ -497,6 +620,21 @@ Por ahora solo **Android**. La version iOS esta planeada para futuro.
 ### ¿Como activo el Plan Pro?
 
 Ve a **Ajustes → Plan del Club → Actualizar a Pro**. Te muestra las instrucciones para contactar al administrador.
+
+### ¿Como les aviso a mis miembros de algo?
+
+Tienes varias opciones segun la urgencia:
+- **Anuncio en el tablero:** Menu → Anuncios → Publicar (todos lo veran al abrir la app)
+- **Notificacion push:** desde Admin → Enviar Aviso (les llega como notificacion al celular)
+- **Compartir un evento:** Calendario → toca el evento → Compartir (lo mandas a WhatsApp del grupo)
+
+### ¿Puedo llamar o mandar WhatsApp a un miembro desde la app?
+
+Si. Toca el miembro en la lista de **Miembros** y veras 3 botones: Llamar, WhatsApp y Email. Funciona en un solo toque sin tener que copiar el numero.
+
+### ¿Como comparto el calendario del club?
+
+Ve a **Calendario**, toca el icono de descargar y se genera un archivo `.ics` que puedes mandar a tus miembros por WhatsApp. Ellos lo importan a su Google Calendar/Outlook y reciben todos tus eventos.
 
 ### ¿Mis datos estan seguros?
 

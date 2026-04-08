@@ -78,12 +78,17 @@ Desarrollar una **plataforma movil multi-tenant offline-first** que permita a cl
 - **Sincronizacion offline-first** con SQLite local
 - Soporte **multi-club** con codigo de acceso
 - **3 ministerios:** GM, Conquistadores, Aventureros
-- **8 modulos:** miembros, unidades, asistencia, eventos, carpeta, reportes, admin, ajustes
+- **9 modulos:** miembros, unidades, asistencia, eventos, carpeta, reportes, admin, ajustes, **anuncios**
 - **3 roles principales:** Director, Consejero, Aspirante (multiplicado por ministerio)
 - **Autenticacion** con bcrypt
 - **Notificaciones push** con Firebase Cloud Messaging
 - **Reportes PDF**
 - **Importacion** desde Google Sheets (CSV)
+- **Modulo de comunicacion social:**
+  - Tablero de Anuncios estilo feed (4 tipos: general/urgente/evento/devocional)
+  - Compartir eventos y anuncios a WhatsApp/Facebook/email/etc
+  - Contacto rapido a miembros (llamar, WhatsApp, email) en un toque
+  - Notificaciones push integradas con FCM
 
 ### No incluye (en esta version)
 
@@ -194,7 +199,7 @@ Desarrollar una **plataforma movil multi-tenant offline-first** que permita a cl
                   [miembros]
 ```
 
-### Tablas principales (13)
+### Tablas principales (14)
 
 1. **clubes** - tenants del sistema
 2. **miembros** - usuarios con auth y rol
@@ -202,13 +207,14 @@ Desarrollar una **plataforma movil multi-tenant offline-first** que permita a cl
 4. **unidad_miembros** - relacion N:M
 5. **asistencia** - registros por unidad+fecha+miembro
 6. **eventos** - calendario compartido
-7. **carpeta_secciones** - secciones de la investidura
-8. **carpeta_requisitos** - requisitos por seccion
-9. **carpeta_progreso** - estado de cada requisito por aspirante
-10. **especialidades** - catalogo de especialidades JA
-11. **miembro_especialidad** - progreso N:M
-12. **audit_log** - historial de acciones
-13. **configuracion** - key-value para settings
+7. **anuncios** - tablero de comunicacion del club (4 tipos)
+8. **carpeta_secciones** - secciones de la investidura
+9. **carpeta_requisitos** - requisitos por seccion
+10. **carpeta_progreso** - estado de cada requisito por aspirante
+11. **especialidades** - catalogo de especialidades JA
+12. **miembro_especialidad** - progreso N:M
+13. **audit_log** - historial de acciones
+14. **configuracion** - key-value para settings
 
 ---
 
@@ -219,10 +225,11 @@ Desarrollar una **plataforma movil multi-tenant offline-first** que permita a cl
 | **Onboarding** | 4 paginas + ClubSetup | Todos (primera vez) |
 | **Auth** | Login, FirstRun | Todos |
 | **Home** | Inicio | Todos |
-| **Miembros** | Lista, Crear, Editar, Detalle | Director |
+| **Miembros** | Lista, Crear, Editar, Detalle (con contacto rapido) | Director |
 | **Unidades** | Lista, Detalle, Asignar | Director |
 | **Asistencia** | Registrar, Historial | Director, Consejero |
-| **Calendario** | Vista mensual, Crear evento | Todos (lectura), Director (escritura) |
+| **Calendario** | Vista mensual, Crear/compartir evento | Todos (lectura), Director (escritura) |
+| **Anuncios** | Feed timeline, Publicar, Compartir | Todos (lectura), Director (escritura) |
 | **Carpeta** | Mi carpeta, Aprobar, Gestionar | Aspirante (suya), Consejero/Director (todas) |
 | **Reportes** | 3 tipos PDF | Director (Plan Pro) |
 | **Admin** | Panel, Cuentas, Importar, Aprobaciones, Sync | Director |
@@ -292,7 +299,109 @@ COORDINADOR GENERAL (lectura de todo el club)
 
 ---
 
-## 13. Casos de uso principales
+## 13. Modulo de comunicacion y redes sociales
+
+Como parte del proyecto se implemento un **modulo completo de comunicacion social** que cumple con la unidad academica de "Implementacion de caracteristicas de comunicacion y redes sociales en la aplicacion".
+
+### Componentes implementados
+
+#### 1. Tablero de Anuncios (in-app feed)
+
+Funciona como un mini-feed estilo red social:
+
+- **Tabla `anuncios`** en PostgreSQL y SQLite local con campos: id, club_id, ministerio, titulo, contenido, autor_id, autor_nombre, tipo, fecha_publicacion, activo
+- **AnunciosScreen** con UI tipo timeline mostrando cada anuncio como tarjeta con icono y color por tipo
+- **4 categorias:** general (verde), urgente (rojo), evento (azul), devocional (morado)
+- Solo el Director puede publicar; todos los miembros del club pueden ver
+- Sincronizacion automatica via `/api/sync` (sin gastar funcion serverless adicional)
+- Tiempo relativo: "hace 5m", "hace 2h", "hace 3d"
+- Eliminacion logica (campo `activo`) para auditoria
+
+#### 2. Compartir a redes sociales
+
+Implementado con el paquete `share_plus`:
+
+- **Eventos:** boton "Compartir evento" en el detalle del calendario
+  - Texto formateado con emojis (📅 🗓️ 📍)
+  - Incluye titulo, fecha, hora, ubicacion, descripcion
+  - Se abre el sheet nativo de Android para elegir destino (WhatsApp, Telegram, Facebook, email, etc.)
+- **Anuncios:** boton de compartir en cada tarjeta del feed
+- **Calendario completo:** exportacion a archivo `.ics` (estandar iCalendar) compartible
+
+#### 3. Contacto rapido a miembros
+
+Widget reutilizable `ContactoRapido` con 3 botones:
+
+- **Llamar:** abre el marcador del telefono con el numero pre-cargado (`tel:` URI)
+- **WhatsApp:** abre WhatsApp en chat con el miembro, mensaje pre-rellenado "Hola [nombre]," (URL `wa.me`)
+- **Email:** abre el cliente de correo con destinatario configurado (`mailto:` URI)
+
+Implementado con el paquete `url_launcher`. El widget detecta automaticamente que datos tiene el miembro y solo muestra los botones disponibles.
+
+#### 4. Notificaciones push
+
+Sistema completo con Firebase Cloud Messaging:
+
+- **Topics por rol:** todos, admin, consejero, aspirante
+- **Background handler:** recibe notificaciones aun con la app cerrada
+- **Notificaciones locales:** fallback para mostrar avisos in-app
+- **Endpoint backend:** `/api/send-notification` para que el servidor mande push
+
+### Arquitectura del modulo
+
+```
+Cliente Flutter
++-- AnunciosScreen (feed)
+|   +-- DatabaseService.getAnuncios()
+|   +-- DatabaseService.insertAnuncio()  --> SyncManager
+|
++-- MiembrosScreen
+|   +-- ContactoRapido widget
+|       +-- url_launcher (tel/wa.me/mailto)
+|
++-- CalendarioScreen
+|   +-- _compartirEvento()
+|       +-- share_plus (Share.share)
+|
++-- NotificationService
+    +-- firebase_messaging
+    +-- flutter_local_notifications
+```
+
+### Tabla `anuncios` (esquema)
+
+```sql
+CREATE TABLE anuncios (
+  id TEXT PRIMARY KEY,
+  club_id TEXT NOT NULL,
+  ministerio TEXT DEFAULT 'todos',
+  titulo TEXT NOT NULL,
+  contenido TEXT NOT NULL,
+  autor_id TEXT,
+  autor_nombre TEXT,
+  tipo TEXT DEFAULT 'general',
+  fecha_publicacion TEXT NOT NULL,
+  activo INTEGER DEFAULT 1
+);
+CREATE INDEX idx_anuncios_club ON anuncios(club_id);
+CREATE INDEX idx_anuncios_fecha ON anuncios(fecha_publicacion DESC);
+```
+
+### Cumplimiento del objetivo academico
+
+El modulo cumple con los requisitos de la unidad de comunicacion:
+
+| Requisito | Implementacion |
+|-----------|----------------|
+| Comunicacion entre usuarios | Tablero de anuncios + notificaciones push |
+| Integracion con redes sociales | Compartir a WhatsApp, Facebook, Telegram, email |
+| Comunicacion directa | Botones de llamar, WhatsApp, email en cada miembro |
+| Notificaciones en tiempo real | Firebase Cloud Messaging con topics por rol |
+| Persistencia de mensajes | Tabla `anuncios` con sincronizacion offline-first |
+
+---
+
+## 14. Casos de uso principales
 
 ### Caso 1: Director crea su club
 
@@ -333,7 +442,7 @@ COORDINADOR GENERAL (lectura de todo el club)
 
 ---
 
-## 14. Resultados obtenidos
+## 15. Resultados obtenidos
 
 ### Datos reales de prueba
 
@@ -363,7 +472,7 @@ Despues de las pruebas iniciales en el club Doulos:
 
 ---
 
-## 15. Conclusiones
+## 16. Conclusiones
 
 GMU Doulos v2.0 cumple con el objetivo de **almacenar y administrar contenidos** que la aplicacion movil consume, satisfaciendo los requisitos de la Unidad 3 del programa academico.
 
@@ -389,7 +498,7 @@ GMU Doulos v2.0 cumple con el objetivo de **almacenar y administrar contenidos**
 
 ---
 
-## 16. Trabajos futuros
+## 17. Trabajos futuros
 
 Lo que se podria mejorar en versiones siguientes:
 
@@ -406,7 +515,7 @@ Lo que se podria mejorar en versiones siguientes:
 
 ---
 
-## 17. Repositorio y enlaces
+## 18. Repositorio y enlaces
 
 - **Codigo fuente:** https://github.com/PabloIAIN/gmu_doulos
 - **Backend en produccion:** https://gmu-doulos.vercel.app/api

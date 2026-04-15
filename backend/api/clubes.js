@@ -39,12 +39,18 @@ module.exports = async (req, res) => {
   try {
     // ═══════ GET ═══════
     if (req.method === 'GET') {
-      const { codigo, id, pendientes, club_id, ministerio } = req.query;
+      const { codigo, id, pendientes, club_id, ministerio, tipo } = req.query;
 
       // Verificar código de acceso (sin auth)
+      // tipo: 'miembro' busca codigo_unirse, default busca codigo_acceso (director)
       if (codigo) {
-        const rows = await sql`SELECT id, nombre, iglesia, ciudad, pais, ministerios, plan, max_miembros, activo FROM clubes WHERE codigo_acceso = ${codigo} AND activo = 1`;
-        if (rows.length === 0) return res.status(404).json({ error: 'Código de acceso inválido' });
+        let rows;
+        if (tipo === 'miembro') {
+          rows = await sql`SELECT id, nombre, iglesia, ciudad, pais, ministerios, plan, max_miembros, activo FROM clubes WHERE codigo_unirse = ${codigo} AND activo = 1`;
+        } else {
+          rows = await sql`SELECT id, nombre, iglesia, ciudad, pais, ministerios, plan, max_miembros, activo FROM clubes WHERE codigo_acceso = ${codigo} AND activo = 1`;
+        }
+        if (rows.length === 0) return res.status(404).json({ error: 'Código inválido' });
         return res.status(200).json({ ok: true, data: rows[0] });
       }
 
@@ -159,9 +165,9 @@ module.exports = async (req, res) => {
       if (!superKey || superKey !== process.env.SUPER_ADMIN_KEY) {
         return res.status(403).json({ error: 'Se requiere action válida o clave de super administrador' });
       }
-      const { id, nombre, iglesia, ciudad, pais, asociacion, union_campo, codigo_acceso, ministerios, plan, max_miembros } = req.body;
+      const { id, nombre, iglesia, ciudad, pais, asociacion, union_campo, codigo_acceso, codigo_unirse, ministerios, plan, max_miembros } = req.body;
       if (!id || !nombre || !iglesia || !ciudad || !codigo_acceso) return res.status(400).json({ error: 'id, nombre, iglesia, ciudad y codigo_acceso requeridos' });
-      await sql`INSERT INTO clubes (id,nombre,iglesia,ciudad,pais,asociacion,union_campo,codigo_acceso,ministerios,plan,max_miembros) VALUES (${id},${nombre},${iglesia},${ciudad},${pais||'México'},${asociacion||null},${union_campo||null},${codigo_acceso},${ministerios||'gm'},${plan||'gratis'},${max_miembros||20}) ON CONFLICT (id) DO UPDATE SET nombre=EXCLUDED.nombre,iglesia=EXCLUDED.iglesia,ministerios=EXCLUDED.ministerios,updated_at=NOW()`;
+      await sql`INSERT INTO clubes (id,nombre,iglesia,ciudad,pais,asociacion,union_campo,codigo_acceso,codigo_unirse,ministerios,plan,max_miembros) VALUES (${id},${nombre},${iglesia},${ciudad},${pais||'México'},${asociacion||null},${union_campo||null},${codigo_acceso},${codigo_unirse||null},${ministerios||'gm'},${plan||'gratis'},${max_miembros||20}) ON CONFLICT (id) DO UPDATE SET nombre=EXCLUDED.nombre,iglesia=EXCLUDED.iglesia,codigo_unirse=EXCLUDED.codigo_unirse,ministerios=EXCLUDED.ministerios,updated_at=NOW()`;
       return res.status(201).json({ ok: true, id });
     }
 

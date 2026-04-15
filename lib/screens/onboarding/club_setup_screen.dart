@@ -331,7 +331,7 @@ class _FlujoUnirseState extends State<_FlujoUnirse> {
     if (_codigoCtl.text.trim().isEmpty) return;
     setState(() => _isLoading = true);
     try {
-      final data = await ApiService().verificarCodigo(_codigoCtl.text.trim().toUpperCase());
+      final data = await ApiService().verificarCodigo(_codigoCtl.text.trim().toUpperCase(), tipo: 'miembro');
       if (data == null) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código no encontrado'), backgroundColor: AppTheme.errorRed));
       } else {

@@ -293,9 +293,11 @@ class ApiService {
   // ══════════════════════════════════════════
 
   /// Verificar código de acceso (no requiere API key)
-  Future<Map<String, dynamic>?> verificarCodigo(String codigo) async {
+  /// tipo: 'director' (codigo_acceso) o 'miembro' (codigo_unirse)
+  Future<Map<String, dynamic>?> verificarCodigo(String codigo, {String tipo = 'director'}) async {
+    final url = '$_baseUrl/clubes?codigo=$codigo${tipo == 'miembro' ? '&tipo=miembro' : ''}';
     final response = await http.get(
-      Uri.parse('$_baseUrl/clubes?codigo=$codigo'),
+      Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 404) return null;

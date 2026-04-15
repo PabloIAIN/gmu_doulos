@@ -152,6 +152,7 @@ async function initDatabase() {
       union_campo TEXT,
       division TEXT DEFAULT 'División Interamericana',
       codigo_acceso TEXT UNIQUE NOT NULL,
+      codigo_unirse TEXT UNIQUE,
       ministerios TEXT DEFAULT 'gm',
       plan TEXT DEFAULT 'gratis',
       max_miembros INTEGER DEFAULT 20,
@@ -161,6 +162,10 @@ async function initDatabase() {
       updated_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  // Migracion: agregar codigo_unirse si la tabla ya existia sin esa columna
+  try {
+    await sql`ALTER TABLE clubes ADD COLUMN IF NOT EXISTS codigo_unirse TEXT`;
+  } catch (e) { console.log('migration codigo_unirse:', e.message); }
 
   // ── Tablas de plantillas DIA ──
   await sql`

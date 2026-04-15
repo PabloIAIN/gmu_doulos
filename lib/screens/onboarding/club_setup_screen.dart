@@ -148,12 +148,20 @@ class _FlujoDirectorState extends State<_FlujoDirector> {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código inválido'), backgroundColor: AppTheme.errorRed));
       } else {
         _clubData = data;
-        final ministerios = (data['ministerios'] as String? ?? 'gm').split(',').map((e) => e.trim()).toList();
-        if (ministerios.length == 1) {
-          _ministerio = ministerios.first;
+        // Si el codigo trae el ministerio (nuevo esquema), usarlo directo
+        final ministerioDelCodigo = data['ministerio'] as String?;
+        if (ministerioDelCodigo != null) {
+          _ministerio = ministerioDelCodigo;
           setState(() => _step = 2);
         } else {
-          setState(() => _step = 1);
+          // Fallback: pedir al usuario que elija si el club tiene varios
+          final ministerios = (data['ministerios'] as String? ?? 'gm').split(',').map((e) => e.trim()).toList();
+          if (ministerios.length == 1) {
+            _ministerio = ministerios.first;
+            setState(() => _step = 2);
+          } else {
+            setState(() => _step = 1);
+          }
         }
       }
     } catch (e) {
@@ -336,8 +344,14 @@ class _FlujoUnirseState extends State<_FlujoUnirse> {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código no encontrado'), backgroundColor: AppTheme.errorRed));
       } else {
         _clubData = data;
-        final mins = (data['ministerios'] as String).split(',').map((e) => e.trim()).toList();
-        if (mins.length == 1) _ministerio = mins.first;
+        // Si el codigo trae el ministerio (nuevo esquema), usarlo directo
+        final ministerioDelCodigo = data['ministerio'] as String?;
+        if (ministerioDelCodigo != null) {
+          _ministerio = ministerioDelCodigo;
+        } else {
+          final mins = (data['ministerios'] as String).split(',').map((e) => e.trim()).toList();
+          if (mins.length == 1) _ministerio = mins.first;
+        }
         setState(() => _step = 1);
       }
     } catch (e) {

@@ -42,8 +42,21 @@ module.exports = async (req, res) => {
       const { codigo, id, pendientes, club_id, ministerio, tipo } = req.query;
 
       // Verificar código de acceso (sin auth)
-      // tipo: 'miembro' busca codigo_unirse, default busca codigo_acceso (director)
+      // El codigo se busca en tabla codigos (con ministerio + tipo)
+      // Fallback a codigo_acceso/codigo_unirse para compatibilidad
       if (codigo) {
+        // 1. Buscar en tabla codigos (nuevo esquema con ministerio)
+        const tipoFiltro = tipo === 'miembro' ? 'miembro' : 'director';
+        const cods = await sql`SELECT c.club_id, c.ministerio, c.tipo, cl.nombre, cl.iglesia, cl.ciudad, cl.pais, cl.ministerios, cl.plan, cl.max_miembros, cl.activo FROM codigos c JOIN clubes cl ON cl.id = c.club_id WHERE c.codigo = ${codigo} AND c.tipo = ${tipoFiltro} AND c.activo = 1 AND cl.activo = 1`;
+        if (cods.length > 0) {
+          const r = cods[0];
+          return res.status(200).json({
+            ok: true,
+            data: { id: r.club_id, nombre: r.nombre, iglesia: r.iglesia, ciudad: r.ciudad, pais: r.pais, ministerios: r.ministerios, plan: r.plan, max_miembros: r.max_miembros, activo: r.activo, ministerio: r.ministerio }
+          });
+        }
+
+        // 2. Fallback al esquema viejo
         let rows;
         if (tipo === 'miembro') {
           rows = await sql`SELECT id, nombre, iglesia, ciudad, pais, ministerios, plan, max_miembros, activo FROM clubes WHERE codigo_unirse = ${codigo} AND activo = 1`;
@@ -83,13 +96,25 @@ module.exports = async (req, res) => {
 
       // ── Onboarding (Director con código) ──
       if (action === 'onboarding') {
-        const { codigo_acceso, ministerio, nombre, apellido, usuario, password } = req.body;
-        if (!codigo_acceso || !ministerio || !nombre || !apellido || !usuario || !password) {
-          return res.status(400).json({ error: 'Campos requeridos: codigo_acceso, ministerio, nombre, apellido, usuario, password' });
+        const { codigo_acceso, ministerio: minBody, nombre, apellido, usuario, password } = req.body;
+        if (!codigo_acceso || !nombre || !apellido || !usuario || !password) {
+          return res.status(400).json({ error: 'Campos requeridos: codigo_acceso, nombre, apellido, usuario, password' });
         }
-        const clubRows = await sql`SELECT * FROM clubes WHERE codigo_acceso = ${codigo_acceso} AND activo = 1`;
-        if (clubRows.length === 0) return res.status(404).json({ error: 'Código de acceso inválido' });
-        const club = clubRows[0];
+
+        // Buscar primero en tabla codigos (nuevo esquema)
+        let club, ministerio;
+        const cods = await sql`SELECT c.club_id, c.ministerio, cl.* FROM codigos c JOIN clubes cl ON cl.id = c.club_id WHERE c.codigo = ${codigo_acceso} AND c.tipo = 'director' AND c.activo = 1 AND cl.activo = 1`;
+        if (cods.length > 0) {
+          club = cods[0];
+          ministerio = cods[0].ministerio;
+        } else {
+          // Fallback al esquema viejo
+          const clubRows = await sql`SELECT * FROM clubes WHERE codigo_acceso = ${codigo_acceso} AND activo = 1`;
+          if (clubRows.length === 0) return res.status(404).json({ error: 'Código de Director inválido' });
+          club = clubRows[0];
+          ministerio = minBody;
+          if (!ministerio) return res.status(400).json({ error: 'ministerio requerido' });
+        }
         if (ministerio !== 'coordinador') {
           const mins = club.ministerios.split(',').map(m => m.trim());
           if (!mins.includes(ministerio)) return res.status(400).json({ error: `Ministerio "${ministerio}" no habilitado` });
@@ -158,6 +183,20 @@ module.exports = async (req, res) => {
         const hash = await bcrypt.hash(nueva_password, 10);
         await sql`UPDATE miembros SET password_hash = ${hash}, updated_at = NOW() WHERE id = ${miembro_id} AND club_id = ${club_id}`;
         return res.status(200).json({ ok: true, mensaje: 'Contraseña actualizada' });
+      }
+
+      // ── Crear codigo (SuperAdmin) ──
+      if (action === 'crear_codigo') {
+        const superKey = req.headers['x-superadmin-key'];
+        if (!superKey || superKey !== process.env.SUPER_ADMIN_KEY) {
+          return res.status(403).json({ error: 'Se requiere clave de super administrador' });
+        }
+        const { codigo, club_id, ministerio, tipo } = req.body;
+        if (!codigo || !club_id || !ministerio || !tipo) {
+          return res.status(400).json({ error: 'codigo, club_id, ministerio y tipo requeridos' });
+        }
+        await sql`INSERT INTO codigos (codigo, club_id, ministerio, tipo) VALUES (${codigo}, ${club_id}, ${ministerio}, ${tipo}) ON CONFLICT (codigo) DO UPDATE SET club_id = EXCLUDED.club_id, ministerio = EXCLUDED.ministerio, tipo = EXCLUDED.tipo, activo = 1`;
+        return res.status(201).json({ ok: true, codigo });
       }
 
       // ── Crear club (SuperAdmin) ──

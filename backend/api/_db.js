@@ -167,6 +167,19 @@ async function initDatabase() {
     await sql`ALTER TABLE clubes ADD COLUMN IF NOT EXISTS codigo_unirse TEXT`;
   } catch (e) { console.log('migration codigo_unirse:', e.message); }
 
+  // ── Tabla codigos: codigos por ministerio (director/miembro) ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS codigos (
+      codigo TEXT PRIMARY KEY,
+      club_id TEXT NOT NULL,
+      ministerio TEXT NOT NULL,
+      tipo TEXT NOT NULL,
+      activo INTEGER DEFAULT 1,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_codigos_club ON codigos(club_id)`;
+
   // ── Tablas de plantillas DIA ──
   await sql`
     CREATE TABLE IF NOT EXISTS carpeta_secciones (

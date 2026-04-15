@@ -30,7 +30,18 @@ class _ClubSetupScreenState extends State<ClubSetupScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: 16),
+              // Boton regresar (solo si hay algo a donde regresar)
+              if (Navigator.of(context).canPop())
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: 'Volver al login',
+                  ),
+                )
+              else
+                const SizedBox(height: 16),
               const Icon(Icons.shield, size: 48, color: Colors.white),
               const SizedBox(height: 8),
               const Text(AppConfig.appName, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),

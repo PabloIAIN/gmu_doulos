@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 import '../models/miembro.dart';
 import '../models/club.dart';
 import 'database_service.dart';
+import 'api_service.dart';
 import 'notification_service.dart';
 
 class AuthService {
@@ -72,19 +73,57 @@ class AuthService {
 
   // ── Login ──
   Future<Miembro?> login(String usuario, String password) async {
-    final miembro = await _db.getMiembroPorUsuario(usuario);
-    if (miembro == null) return null;
+    // 1. Intentar login local (SHA-256)
+    final miembroLocal = await _db.getMiembroPorUsuario(usuario);
+    if (miembroLocal != null) {
+      final hash = hashPassword(password);
+      if (miembroLocal.passwordHash == hash) {
+        _currentUser = miembroLocal;
+        await _db.setConfig('session_user_id', miembroLocal.id);
+        await _cargarClub();
+        await _suscribirTopics();
+        return miembroLocal;
+      }
+    }
 
-    final hash = hashPassword(password);
-    if (miembro.passwordHash != hash) return null;
+    // 2. Intentar login contra el backend (bcrypt)
+    try {
+      final data = await ApiService().login(usuario, password);
+      if (data != null) {
+        // Guardar/actualizar miembro en BD local
+        final miembro = Miembro(
+          id: data['id'] as String,
+          nombre: data['nombre'] as String? ?? '',
+          apellido: data['apellido'] as String? ?? '',
+          fechaNacimiento: DateTime.tryParse(data['fecha_nacimiento']?.toString() ?? '') ?? DateTime(2000, 1, 1),
+          telefono: data['telefono'] as String? ?? '',
+          email: data['email'] as String? ?? '',
+          fotoUrl: data['foto_url'] as String?,
+          clase: data['clase'] as String? ?? '',
+          rol: data['rol'] as String? ?? 'Miembro',
+          activo: true,
+          fechaRegistro: DateTime.now(),
+          usuario: usuario,
+          passwordHash: hashPassword(password),
+        );
+        await _db.insertMiembro(miembro);
 
-    _currentUser = miembro;
-    await _db.setConfig('session_user_id', miembro.id);
+        // Guardar club_id si viene
+        if (data['club_id'] != null) {
+          await _db.setConfig('current_club_id', data['club_id'] as String);
+        }
 
-    // Cargar club
-    await _cargarClub();
-    await _suscribirTopics();
-    return miembro;
+        _currentUser = miembro;
+        await _db.setConfig('session_user_id', miembro.id);
+        await _cargarClub();
+        await _suscribirTopics();
+        return miembro;
+      }
+    } catch (_) {
+      // Sin internet o error de API, solo falla silenciosamente
+    }
+
+    return null;
   }
 
   // ── Logout ──

@@ -87,7 +87,10 @@ El codigo identifica automaticamente el club Y el ministerio, asi que el usuario
 
 ## Instalacion del APK
 
-1. Descarga `app-release.apk` desde [build/app/outputs/flutter-apk/](build/app/outputs/flutter-apk/)
+**Descarga directa del APK:**
+[Descargar app-release.apk desde Google Drive](https://drive.google.com/file/d/1_AlxvYczgjcNSlr9Pn4zgO2O3fX0qU-x/view?usp=sharing)
+
+1. Abre el link y descarga el APK
 2. En tu Android, habilita "Instalar de fuentes desconocidas"
 3. Abre el APK e instala
 4. Abre la app y sigue el onboarding
